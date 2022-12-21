@@ -13,7 +13,7 @@ To run it, you'll need:
 - Run the LEDsController module found in [here](https://github.com/dronsEETAC/LEDsControllerDEE)
 - Run the AutopilotController module found in [here](https://github.com/dronsEETAC/DroneAutopilotDEE) 
 - Run the Gate module found in [here](https://github.com/dronsEETAC/GateDEE) 
-(remember) to use an interpreter of Python 2.X for the Autopilot, otherwise it won't work
+(remember to use an interpreter of Python 2.X for the Autopilot, otherwise it won't work)
 - Run the DroneCircus (this repository)
 
 ## Installing the needed packages for the circus
