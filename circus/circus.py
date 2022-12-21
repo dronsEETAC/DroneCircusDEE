@@ -9,8 +9,8 @@ from utils.DetectorClass import DetectorClass
 # from ColorsClass import ColorsClass
 
 mixer.init()
-#mixer.music.load("../assets/circo.mp3")
-#mixer.music.play(10)
+mixer.music.load("../assets/circo.mp3")
+mixer.music.play(10)
 
 root = tk.Tk()
 root.geometry("800x800")
@@ -26,11 +26,11 @@ myFont = font.Font(family="Bernard MT Condensed", size=28, weight="bold")
 
 
 def applause_music():
-    #mixer.music.stop()
-    #mixer.music.load("../assets/aplausos.mp3")
-    #mixer.music.play(10)
+    mixer.music.stop()
+    mixer.music.load("../assets/aplausos.mp3")
+    mixer.music.play(10)
     time.sleep(5)
-    #mixer.music.stop()
+    mixer.music.stop()
 
 
 def new_window(name, type):
@@ -95,9 +95,9 @@ def bye():
 
 
 def enter():
-    #mixer.music.stop()
-    #mixer.music.load("../assets/redoble.mp3")  # Loading Music File
-    #mixer.music.play(10)
+    mixer.music.stop()
+    mixer.music.load("../assets/redoble.mp3")  # Loading Music File
+    mixer.music.play(10)
     new_window = tk.Toplevel(root)
     new_window.title("Select")
     new_window.geometry("1400x800")
