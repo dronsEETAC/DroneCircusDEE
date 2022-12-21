@@ -244,7 +244,7 @@ class PoseDetector:
                 elif self.__p6(pose_landmarks):
                     res = 6
             else:
-                # to see what are the easy patterns see picture assets/poses_faciles.png
+                # to see what are the easy patterns see picture assets_needed/poses_faciles.png
                 if (
                     (pose_landmarks[12][1] < pose_landmarks[14][1])
                     and (pose_landmarks[14][1] < pose_landmarks[16][1])

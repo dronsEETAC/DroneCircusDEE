@@ -9,13 +9,13 @@ from utils.DetectorClass import DetectorClass
 # from ColorsClass import ColorsClass
 
 mixer.init()
-mixer.music.load("../assets/circo.mp3")
+mixer.music.load("../assets_needed/circo.mp3")
 mixer.music.play(10)
 
 root = tk.Tk()
 root.geometry("800x800")
 
-image = Image.open("../assets/entrada.png")
+image = Image.open("../assets_needed/entrada.png")
 image = image.resize((800, 600), Image.ANTIALIAS)
 bg = ImageTk.PhotoImage(image)
 canvas1 = tk.Canvas(root, width=800, height=600)
@@ -27,7 +27,7 @@ myFont = font.Font(family="Bernard MT Condensed", size=28, weight="bold")
 
 def applause_music():
     mixer.music.stop()
-    mixer.music.load("../assets/aplausos.mp3")
+    mixer.music.load("../assets_needed/aplausos.mp3")
     mixer.music.play(10)
     time.sleep(5)
     mixer.music.stop()
@@ -74,7 +74,7 @@ def bye():
     new_window.title("bye")
     new_window.geometry("800x700")
 
-    image = Image.open("../assets/bye.png")
+    image = Image.open("../assets_needed/bye.png")
     image = image.resize((800, 600), Image.ANTIALIAS)
     bg = ImageTk.PhotoImage(image)
     canvas1 = tk.Canvas(new_window, width=800, height=600)
@@ -96,7 +96,7 @@ def bye():
 
 def enter():
     mixer.music.stop()
-    mixer.music.load("../assets/redoble.mp3")  # Loading Music File
+    mixer.music.load("../assets_needed/redoble.mp3")  # Loading Music File
     mixer.music.play(10)
     new_window = tk.Toplevel(root)
     new_window.title("Select")
@@ -109,7 +109,7 @@ def enter():
     new_window.rowconfigure(1, weight=1)
     new_window.rowconfigure(2, weight=1)
 
-    image2 = Image.open("../assets/gallery.png")
+    image2 = Image.open("../assets_needed/gallery.png")
     image2 = image2.resize((1400, 600), Image.ANTIALIAS)
     bg2 = ImageTk.PhotoImage(image2)
     canvas2 = tk.Canvas(new_window, width=1400, height=600)
@@ -188,7 +188,7 @@ def show_video():
     close_button.pack()
     label = tk.Label(sponsor)
     label.pack()
-    player = tkvideo("../assets/terraDeDrons.mp4", label, loop=1, size=(1200, 900))
+    player = tkvideo("../assets_needed/terraDeDrons.mp4", label, loop=1, size=(1200, 900))
     player.play()
 
     root.mainloop()

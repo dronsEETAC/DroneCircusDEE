@@ -203,11 +203,11 @@ class DetectorClass:
         self.bottom_frame = tk.LabelFrame(self.master, text="EASY")
 
         if self.mode == "fingers":
-            self.image = Image.open("../assets/dedos_faciles.png")
+            self.image = Image.open("../assets_needed/dedos_faciles.png")
         elif self.mode == "pose":
-            self.image = Image.open("../assets/poses_faciles.png")
+            self.image = Image.open("../assets_needed/poses_faciles.png")
         else:
-            self.image = Image.open("../assets/caras_faciles.png")
+            self.image = Image.open("../assets_needed/caras_faciles.png")
 
         self.image = self.image.resize((400, 600), Image.ANTIALIAS)
         self.bg = ImageTk.PhotoImage(self.image)
@@ -327,21 +327,21 @@ class DetectorClass:
         select_level_frame.columnconfigure(1, weight=1)
         select_level_frame.columnconfigure(2, weight=1)
 
-        self.image1 = Image.open("../assets/no_fence.png")
+        self.image1 = Image.open("../assets_needed/no_fence.png")
         self.image1 = self.image1.resize((320, 240), Image.ANTIALIAS)
         self.bg1 = ImageTk.PhotoImage(self.image1)
         canvas1 = tk.Canvas(select_level_frame, width=320, height=240)
         canvas1.create_image(0, 0, image=self.bg1, anchor="nw")
         canvas1.grid(row=0, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
 
-        self.image2 = Image.open("../assets/fence_case1.png")
+        self.image2 = Image.open("../assets_needed/fence_case1.png")
         self.image2 = self.image2.resize((320, 240), Image.ANTIALIAS)
         self.bg2 = ImageTk.PhotoImage(self.image2)
         canvas2 = tk.Canvas(select_level_frame, width=320, height=240)
         canvas2.create_image(0, 0, image=self.bg2, anchor="nw")
         canvas2.grid(row=0, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
 
-        self.image3 = Image.open("../assets/fence_case2.png")
+        self.image3 = Image.open("../assets_needed/fence_case2.png")
         self.image3 = self.image3.resize((320, 240), Image.ANTIALIAS)
         self.bg3 = ImageTk.PhotoImage(self.image3)
         canvas3 = tk.Canvas(select_level_frame, width=320, height=240)
@@ -469,11 +469,11 @@ class DetectorClass:
         self.bottom_frame = tk.LabelFrame(self.master, text="EASY")
         self.level = "easy"
         if self.mode == "fingers":
-            self.image = Image.open("../assets/dedos_faciles.png")
+            self.image = Image.open("../assets_needed/dedos_faciles.png")
         elif self.mode == "pose":
-            self.image = Image.open("../assets/poses_faciles.png")
+            self.image = Image.open("../assets_needed/poses_faciles.png")
         else:
-            self.image = Image.open("../assets/caras_faciles.png")
+            self.image = Image.open("../assets_needed/caras_faciles.png")
 
         self.image = self.image.resize((400, 600), Image.ANTIALIAS)
         self.bg = ImageTk.PhotoImage(self.image)
@@ -503,12 +503,12 @@ class DetectorClass:
         # we still do not have difficult patters. So we use again easy patters
 
         if self.mode == "fingers":
-            self.image = Image.open("../assets/dedos_faciles.png")
+            self.image = Image.open("../assets_needed/dedos_faciles.png")
         elif self.mode == "pose":
-            self.image = Image.open("../assets/poses_dificiles.png")
+            self.image = Image.open("../assets_needed/poses_dificiles.png")
 
         else:
-            self.image = Image.open("../assets/caras_faciles.png")
+            self.image = Image.open("../assets_needed/caras_faciles.png")
 
         self.image = self.image.resize((400, 600), Image.ANTIALIAS)
         self.bg = ImageTk.PhotoImage(self.image)
