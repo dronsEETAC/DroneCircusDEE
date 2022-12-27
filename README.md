@@ -1,5 +1,5 @@
 # Drone Circus 
-![software-arch](https://user-images.githubusercontent.com/32190349/155320787-f8549148-3c93-448b-b79a-388623ca5d3f.png)
+![gallery](https://user-images.githubusercontent.com/100842082/209651156-2c3cd627-aecb-4f25-bc12-530bbab7edde.png)
 
 ## Demo   
 [Drone Engineering Ecosystem demo](https://www.youtube.com/playlist?list=PL64O0POFYjHpXyP-T063RdKRJXuhqgaXY) 
