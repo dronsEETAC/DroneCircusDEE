@@ -4,17 +4,10 @@
 ## Demo   
 [Drone Engineering Ecosystem demo](https://www.youtube.com/playlist?list=PL64O0POFYjHpXyP-T063RdKRJXuhqgaXY) 
 
-## What is drone Circus?
-The Drone Circus is an intuitive way to use your hands to control the drone without the need of typing anything. 
-You can control the drone by means of the software Mission Planner, where you can download it 
-[here](https://ardupilot.org/planner/docs/mission-planner-installation.html).
-To run it, you'll need:
-- Run the CameraController module  found in [here](https://github.com/dronsEETAC/CameraControllerDEE)
-- Run the LEDsController module found in [here](https://github.com/dronsEETAC/LEDsControllerDEE)
-- Run the AutopilotController module found in [here](https://github.com/dronsEETAC/DroneAutopilotDEE) 
-- Run the Gate module found in [here](https://github.com/dronsEETAC/GateDEE) 
-(remember to use an interpreter of Python 2.X for the Autopilot, otherwise it won't work)
-- Run the DroneCircus (this repository)
+## What is Drone Circus?
+Drone Circus is a front-end desktop application developed in Python and Tkinter that allows to control the drone platform in different ways (for example, with the voice or with body poses).  
+It is aimed at allowing the audience participating in the exhibition to interact with the drone in a safe and fun way.
+
 
 ## Installing the needed packages for the circus
 
