@@ -1,3 +1,4 @@
+import math
 import threading
 import time
 import tkinter as tk
@@ -5,13 +6,18 @@ from cv2 import cv2
 import paho.mqtt.client as mqtt
 from PIL import Image, ImageTk
 
-from fingerDetector import FingerDetector
-from poseDetector import PoseDetector
-from faceDetector import FaceDetector
 
-from MapFrameClass import MapFrameClass
+from utils.fingerDetector import FingerDetector
+from utils.poseDetector import PoseDetector
+from utils.faceDetector import FaceDetector
+from utils.speechDetector import SpeechDetector
+from utils.MapFrameClass import MapFrameClass
 from PIL import ImageTk
 from tkinter import messagebox
+from apscheduler.schedulers.background import BackgroundScheduler
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+
 
 
 class DetectorClass:
@@ -27,10 +33,10 @@ class DetectorClass:
         self.level = None
         self.easy_button = None
         self.difficult_button = None
-        self.practice = None
+        self.practice_button = None
         self.close_button = None
         self.button_frame = None
-        self.set_level_button = None
+        self.select_scenario_button = None
         self.connect_button = None
         self.arm_button = None
         self.take_off_button = None
@@ -64,25 +70,47 @@ class DetectorClass:
         # use this when connecting with the RPi
         # broker_address = "10.10.10.1"
 
-        # use pon of these when simulating the system in case you do not have a mosquitto broker installed in your PC
-        # broker_address = "broker.hivemq.com"
-        broker_address = "localhost"
+        # use one of these when simulating the system in case you do not have a mosquitto broker installed in your PC
 
-        broker_port = 8083
+        '''global_broker_address = "broker.hivemq.com"
+        global_broker_port = 8000
+
+        local_broker_address = "broker.emqx.io"
+        local_broker_port = 8083
+
+        global_broker_address = "localhost"
+        global_broker_port = 9001
+
+        local_broker_address = "localhost"
+        local_broker_port = 1883
+
+        mode = 'global'
+
+        if mode == 'global':
+            broker_address = global_broker_address
+            broker_port = global_broker_port
+        else:
+            broker_address = local_broker_address
+            broker_port = local_broker_port
+
         self.client = mqtt.Client("Detector", transport="websockets")
         self.client.on_message = self.on_message
         self.client.connect(broker_address, broker_port)
         self.client.loop_start()
-        self.client.publish("droneCircus/gate/connectPlatform")
+        #self.client.publish("droneCircus/gate/connectPlatform")'''
 
-        self.cap = cv2.VideoCapture(0)
 
-        if self.mode == "fingers":
+        if self.mode == 'fingers':
             self.detector = FingerDetector()
-        elif self.mode == "pose":
+        elif self.mode == 'pose':
             self.detector = PoseDetector()
+        elif self.mode == 'voice':
+            self.detector = SpeechDetector()
         else:
             self.detector = FaceDetector()
+
+        if self.mode != 'voice':
+            self.cap = cv2.VideoCapture(0)
 
         self.master = tk.Frame(self.father_frame)
         self.master.rowconfigure(0, weight=1)
@@ -103,7 +131,11 @@ class DetectorClass:
         self.level = "easy"
 
         self.easy_button = tk.Button(
-            self.top_frame, text="Fácil", bg="#367E18", fg="white", command=self.easy
+            self.top_frame,
+            text="Fácil",
+            bg="#367E18",
+            fg="white",
+            command=self.easy
         )
         self.easy_button.grid(
             row=0, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
@@ -119,12 +151,21 @@ class DetectorClass:
             row=0, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
         )
         # next button to be shown when level (easy or difficult) selected
-        self.practice = tk.Button(
+        self.select_scenario_button = tk.Button(
+            self.top_frame,
+            text="Selecciona el escenario",
+            bg='#F57328',
+            fg="white",
+            command=self.set_level
+        )
+
+        # next button to be shown when scenario has been selected
+        self.practice_button = tk.Button(
             self.top_frame,
             text="Practica los movimientos",
             bg="#F57328",
             fg="white",
-            command=self.practice_fingers,
+            command=self.practice,
         )
         self.close_button = tk.Button(
             self.top_frame, text="Salir", bg="#FFE9A0", fg="black", command=self.close
@@ -137,34 +178,24 @@ class DetectorClass:
         self.button_frame.columnconfigure(0, weight=1)
         self.button_frame.columnconfigure(1, weight=1)
         self.button_frame.columnconfigure(2, weight=1)
-        self.button_frame.columnconfigure(2, weight=1)
 
-        self.set_level_button = tk.Button(
-            self.button_frame,
-            text="Set level",
-            bg="#CC3636",
-            fg="white",
-            command=self.set_level,
-        )
-        self.set_level_button.grid(
-            row=0, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
-        )
+
         self.connect_button = tk.Button(
             self.button_frame,
             text="Connect",
             bg="#CC3636",
             fg="white",
-            command=self.connect,
+            command=self.select_connection_mode,
         )
         self.connect_button.grid(
-            row=0, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+            row=0, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
         )
 
         self.arm_button = tk.Button(
             self.button_frame, text="Arm", bg="#CC3636", fg="white", command=self.arm
         )
         self.arm_button.grid(
-            row=0, column=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+            row=0, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
         )
         self.take_off_button = tk.Button(
             self.button_frame,
@@ -174,7 +205,7 @@ class DetectorClass:
             command=self.take_off,
         )
         self.take_off_button.grid(
-            row=0, column=3, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+            row=0, column=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
         )
 
         # button to be shown when flying
@@ -202,16 +233,19 @@ class DetectorClass:
         # by defaulf, easy mode is selected
         self.bottom_frame = tk.LabelFrame(self.master, text="EASY")
 
+
         if self.mode == "fingers":
             self.image = Image.open("../assets_needed/dedos_faciles.png")
         elif self.mode == "pose":
             self.image = Image.open("../assets_needed/poses_faciles.png")
+        elif self.mode == 'voice':
+            self.image = Image.open("../assets_needed/voces_faciles.png")
         else:
             self.image = Image.open("../assets_needed/caras_faciles.png")
 
-        self.image = self.image.resize((400, 600), Image.ANTIALIAS)
+        self.image = self.image.resize((350, 500), Image.ANTIALIAS)
         self.bg = ImageTk.PhotoImage(self.image)
-        canvas1 = tk.Canvas(self.bottom_frame, width=400, height=600)
+        canvas1 = tk.Canvas(self.bottom_frame, width=350, height=500)
         canvas1.pack(fill="both", expand=True)
         canvas1.create_image(0, 0, image=self.bg, anchor="nw")
 
@@ -301,19 +335,76 @@ class DetectorClass:
             self.map.move_drone(position)
 
     def connect(self):
-
-        print("Voy a conectar")
         # does not allow to connect if the level of difficulty is not fixed
-        if self.set_level_button["bg"] == "#367E18":
+        if self.select_scenario_button["bg"] == "#367E18":
+            if self.connection_mode == 'global':
+                broker_address = "broker.hivemq.com"
+                broker_port = 8000
+            else:
+                broker_address = "localhost"
+                broker_port = 9001
+
+            self.client = mqtt.Client("Detector", transport="websockets")
+            self.client.on_message = self.on_message
+            self.client.connect(broker_address, broker_port)
+            self.client.loop_start()
             self.close_button2.grid_forget()
-            self.client.subscribe("autopilotService/droneCircus/connected")
-            self.client.publish("droneCircus/autopilotService/connect")
+            self.client.subscribe("autopilotService/droneCircus/#")
+            self.client.publish("droneCircus/autopilotService/connectPlatform")
         else:
             messagebox.showwarning(
                 "Error",
                 "Antes de conectar debes fijar el nivel de dificultad",
                 parent=self.master,
             )
+
+    def global_mode (self):
+        self.connection_mode = 'global'
+        self.select_connection_mode_window.destroy()
+        self.connect()
+
+    def local_mode(self):
+        self.connection_mode = 'local'
+        self.select_connection_mode_window.destroy()
+        self.connect()
+    def select_connection_mode (self):
+        self.select_connection_mode_window = tk.Toplevel(self.master)
+        self.select_connection_mode_window.title("Select connection mode")
+        self.select_connection_mode_window.geometry("1200x500")
+        select_connection_mode_frame = tk.Frame(self.select_connection_mode_window)
+        select_connection_mode_frame.pack()
+        select_connection_mode_frame.rowconfigure(0, weight=1)
+        select_connection_mode_frame.rowconfigure(1, weight=1)
+        select_connection_mode_frame.columnconfigure(0, weight=1)
+        select_connection_mode_frame.columnconfigure(1, weight=1)
+
+        self.image1 = Image.open("../assets_needed/connection_mode.png")
+        self.image1 = self.image1.resize((1100, 450), Image.ANTIALIAS)
+        self.bg1 = ImageTk.PhotoImage(self.image1)
+        canvas1 = tk.Canvas( select_connection_mode_frame, width=1100, height=450)
+        canvas1.create_image(0, 0, image=self.bg1, anchor="nw")
+        canvas1.grid(row=0, column=0, padx=5, pady=5, columnspan = 2, sticky=tk.N + tk.S + tk.E + tk.W)
+
+        self.global_button = tk.Button(
+            select_connection_mode_frame,
+            text="Global",
+            bg="#CC3636",
+            fg="white",
+            command=self.global_mode,
+        )
+        self.global_button.grid(
+            row=1, column=0, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
+        self.local_button = tk.Button(
+            select_connection_mode_frame,
+            text="Local",
+            bg="#CC3636",
+            fg="white",
+            command=self.local_mode,
+        )
+        self.local_button.grid(
+            row=1, column=1, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
 
     def set_level(self):
         self.select_level_window = tk.Toplevel(self.master)
@@ -382,20 +473,41 @@ class DetectorClass:
     def level1(self):
         self.selected_level = "Basico"
         self.select_level_window.destroy()
-        self.set_level_button["text"] = "Básico"
-        self.set_level_button["bg"] = "#367E18"
+        self.select_scenario_button["text"] = "Básico"
+        self.select_scenario_button["bg"] = "#367E18"
+        # show button to start practising
+        self.practice_button.grid(
+            row=2, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
+        self.close_button.grid(
+            row=2, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
 
     def level2(self):
         self.selected_level = "Medio"
         self.select_level_window.destroy()
-        self.set_level_button["text"] = "Medio"
-        self.set_level_button["bg"] = "#367E18"
+        self.select_scenario_button["text"] = "Medio"
+        self.select_scenario_button["bg"] = "#367E18"
+        # show button to start practising
+        self.practice_button.grid(
+            row=2, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
+        self.close_button.grid(
+            row=2, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
 
     def level3(self):
         self.selected_level = "Avanzado"
         self.select_level_window.destroy()
-        self.set_level_button["text"] = "Avanzado"
-        self.set_level_button["bg"] = "#367E18"
+        self.select_scenario_button["text"] = "Avanzado"
+        self.select_scenario_button["bg"] = "#367E18"
+        # show button to start practising
+        self.practice_button.grid(
+            row=2, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
+        self.close_button.grid(
+            row=2, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
 
     def arm(self):
         # do not allow arming if destination is not fixed
@@ -428,11 +540,13 @@ class DetectorClass:
         cv2.destroyAllWindows()
         cv2.waitKey(1)
 
-    def practice_fingers(self):
+
+    def practice(self):
+        print ('vamos')
         if self.state == "initial":
             # start practising
-            self.practice["bg"] = "#367E18"
-            self.practice["text"] = "Estoy preparado. Quiero volar"
+            self.practice_button["bg"] = "#367E18"
+            self.practice_button["text"] = "Estoy preparado. Quiero volar"
             self.state = "practising"
             # startvideo stream to practice
             x = threading.Thread(target=self.practising)
@@ -442,7 +556,7 @@ class DetectorClass:
             # stop the video stream thread for practice
             self.state = "closed"
 
-            self.practice.grid_forget()
+            self.practice_button.grid_forget()
 
             # show buttons for connect, arm and takeOff
             self.button_frame.grid(
@@ -455,13 +569,12 @@ class DetectorClass:
             )
 
     def easy(self):
-        # show button to start practising
-        self.practice.grid(
-            row=1, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        # show button to select scenario
+        self.select_scenario_button.grid(
+            row=1, column=0, columnspan=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
         )
-        self.close_button.grid(
-            row=1, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
-        )
+
+
         # highlight codes for easy pattern
         self.difficult_button["bg"] = "#CC3636"
         self.easy_button["bg"] = "#367E18"
@@ -472,12 +585,14 @@ class DetectorClass:
             self.image = Image.open("../assets_needed/dedos_faciles.png")
         elif self.mode == "pose":
             self.image = Image.open("../assets_needed/poses_faciles.png")
+        elif self.mode == 'voice':
+            self.image = Image.open("../assets_needed/voces_faciles.png")
         else:
             self.image = Image.open("../assets_needed/caras_faciles.png")
 
-        self.image = self.image.resize((400, 600), Image.ANTIALIAS)
+        self.image = self.image.resize((350, 500), Image.ANTIALIAS)
         self.bg = ImageTk.PhotoImage(self.image)
-        canvas1 = tk.Canvas(self.bottom_frame, width=400, height=600)
+        canvas1 = tk.Canvas(self.bottom_frame, width=350, height=500)
         canvas1.pack(fill="both", expand=True)
         canvas1.create_image(0, 0, image=self.bg, anchor="nw")
 
@@ -486,12 +601,10 @@ class DetectorClass:
         )
 
     def difficult(self):
-        # show button to start practising
-        self.practice.grid(
-            row=1, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
-        )
-        self.close_button.grid(
-            row=1, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+
+        # show button to select scenario
+        self.select_scenario_button.grid(
+            row=1, column=0, columnspan=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
         )
 
         # highlight codes for difficult pattern
@@ -506,14 +619,15 @@ class DetectorClass:
             self.image = Image.open("../assets_needed/dedos_faciles.png")
         elif self.mode == "pose":
             self.image = Image.open("../assets_needed/poses_dificiles.png")
-
+        elif self.mode == 'voice':
+            self.image = Image.open("../assets_needed/voces_dificiles.png")
         else:
             self.image = Image.open("../assets_needed/caras_faciles.png")
 
-        self.image = self.image.resize((400, 600), Image.ANTIALIAS)
+        self.image = self.image.resize((350, 500), Image.ANTIALIAS)
         self.bg = ImageTk.PhotoImage(self.image)
 
-        canvas1 = tk.Canvas(self.bottom_frame, width=400, height=600)
+        canvas1 = tk.Canvas(self.bottom_frame, width=350, height=500)
         canvas1.pack(fill="both", expand=True)
 
         canvas1.create_image(0, 0, image=self.bg, anchor="nw")
@@ -541,47 +655,135 @@ class DetectorClass:
         else:
             return ""
 
+
+    def movePoint (self):
+        print ('muevo a ', self.direction)
+        bearing = None
+        if self.direction == 'Norte':
+            bearing = math.radians(0)
+        elif self.direction == 'Sur':
+            bearing= math.radians(180)
+        elif self.direction == 'Este':
+            bearing = math.radians(90)
+        elif self.direction == 'Oeste':
+            bearing = math.radians(270)
+        if bearing != None:
+            R = 6378.1;
+            d = 0.001;
+
+            lat = math.radians(self.practicePoint[0]);
+            lon = math.radians(self.practicePoint[1]);
+
+            lat2 = math.asin(math.sin(lat) * math.cos(d / R) +
+                             math.cos(lat) * math.sin(d / R) * math.cos(bearing));
+
+            lon2 = lon + math.atan2(math.sin(bearing) * math.sin(d / R) * math.cos(lat),
+                                     math.cos(d / R) - math.sin(lat) * math.sin(lat2));
+
+            lat2 = math.degrees(lat2);
+            lon2 = math.degrees(lon2);
+
+            if self.selected_level == 'Basico' \
+                    and self.dronLabLimits.contains(Point(lat2,lon2)):
+                self.practicePoint = [lat2,lon2]
+                self.map.move_drone([lat2,lon2])
+
+            elif self.selected_level == 'Medio' \
+                    and self.dronLabLimits.contains(Point(lat2, lon2)) \
+                    and not self.obstacle_1.contains(Point(lat2, lon2)) :
+                self.practicePoint = [lat2, lon2]
+                self.map.move_drone([lat2, lon2])
+
+            elif self.dronLabLimits.contains(Point(lat2, lon2)) \
+                    and not self.obstacle_2_1.contains(Point(lat2, lon2)) \
+                    and not self.obstacle_2_2.contains(Point(lat2, lon2)) \
+                    and not self.obstacle_2_3.contains(Point(lat2, lon2)):
+                self.practicePoint = [lat2, lon2]
+                self.map.move_drone([lat2, lon2])
+
+
     def practising(self):
+
+        self.direction = None
+
+        self.dronLabLimits = Polygon(
+            [(41.2764151, 1.9882914),
+             (41.2762170, 1.9883551),
+             (41.2763733, 1.9890491),
+             (41.2765582, 1.9889881)])
+
+        self.obstacle_1 = Polygon(
+            [(41.2764408, 1.9885938),
+             (41.2764368, 1.9886494),
+             (41.2763385, 1.9886407),
+             (41.2763450, 1.9885878)])
+
+        self.obstacle_2_1 = Polygon(
+            [(41.2765219, 1.9888506),
+             (41.2764065, 1.9888902),
+             (41.2763924, 1.9888600),
+             (41.2765669, 1.9887990)])
+        self.obstacle_2_2 = Polygon(
+            [(41.2764287, 1.9887453),
+             (41.2763123, 1.9888077),
+             (41.2763032, 1.9887460),
+             (41.2764267, 1.9887111)])
+        self.obstacle_2_3 = Polygon(
+            [(41.2764569, 1.9885515),
+             (41.2763461, 1.9886903),
+             (41.2763274, 1.9886535),
+             (41.2764473, 1.9885274)])
+
+        self.practicePoint = [41.2765003, 1.9889760]
+        self.show_map(self.practicePoint)
+        sched = BackgroundScheduler()
+        sched.add_job(self.movePoint, 'interval', seconds=0.5)
+        sched.start()
+
         # when the user changes the pattern (new face, new pose or new fingers) the system
         # waits some time (ignore 8 video frames) for the user to stabilize the new pattern
         # we need the following variables to control this
-        prev_code = -1
+        prevCode = -1
         cont = 0
+        if self.mode == 'voice':
+            self.map.putText('Di algo ...')
 
-        while self.state == "practising":
-            success, image = self.cap.read()
-            if not success:
-                print("Ignoring empty camera frame.")
-                # If loading a video, use 'break' instead of 'continue'.
-                continue
+        while self.state == 'practising':
+
             # use the selected detector to get the code of the pattern and the image with landmarks
-            code, img = self.detector.detect(image, self.level)
-            img = cv2.resize(img, (800, 600))
-            img = cv2.flip(img, 1)
 
-            # if user changed the pattern we will ignore the next 8 video frames
-            if code != prev_code:
-                cont = 4
-                prev_code = code
+            if self.mode != 'voice':
+                success, image = self.cap.read()
+                if not success:
+                    print("Ignoring empty camera frame.")
+                    # If loading a video, use 'break' instead of 'continue'.
+                    continue
+                img = cv2.resize(image, (800, 600))
+                img = cv2.flip(img, 1)
+                code, img = self.detector.detect(img, self.level)
+                # if user changed the pattern we will ignore the next 8 video frames
+                if (code != prevCode):
+                    cont = 4
+                    prevCode = code
+                else:
+                    cont = cont - 1
+                    if cont < 0:
+                        # the first 8 video frames of the new pattern (to be ignored) are done
+                        # we can start showing new results
+                        self.direction = self.__set_direction(code)
+                        cv2.putText(img, self.direction, (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 10)
+
+
+                cv2.imshow('video', img)
+                cv2.waitKey(1)
             else:
-                cont = cont - 1
-                if cont < 0:
-                    # the first 8 video frames of the new pattern (to be ignored) are done
-                    # we can start showing new results
-                    direction = self.__set_direction(code)
-                    cv2.putText(
-                        img,
-                        direction,
-                        (50, 450),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        3,
-                        (0, 0, 255),
-                        10,
-                    )
+                code, voice = self.detector.detect(self.level)
+                if code != -1:
+                    self.direction = self.__set_direction(code)
+                self.map.putText(voice)
 
-            cv2.imshow("video", img)
-            cv2.waitKey(1)
-        cv2.destroyWindow("video")
+        sched.shutdown()
+        cv2.destroyWindow('video')
         cv2.waitKey(1)
 
     def flying(self):

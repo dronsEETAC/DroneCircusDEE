@@ -1,10 +1,10 @@
-# Drone Engineering Ecosystem   
+# Drone Circus 
 ![software-arch](https://user-images.githubusercontent.com/32190349/155320787-f8549148-3c93-448b-b79a-388623ca5d3f.png)
 
 ## Demo   
 [Drone Engineering Ecosystem demo](https://www.youtube.com/playlist?list=PL64O0POFYjHpXyP-T063RdKRJXuhqgaXY) 
 
-## Drone Circus
+## What is drone Circus?
 The Drone Circus is an intuitive way to use your hands to control the drone without the need of typing anything. 
 You can control the drone by means of the software Mission Planner, where you can download it 
 [here](https://ardupilot.org/planner/docs/mission-planner-installation.html).
