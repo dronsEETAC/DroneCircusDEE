@@ -6,12 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="b8c8774b-02c7-4159-bfc4-e66d7554598a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets_needed/gallery.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets_needed/gallery.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/circus/circus.py" beforeDir="false" afterPath="$PROJECT_DIR$/circus/circus.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements_old.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets_needed/caso1.waypoints" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets_needed/caso2.waypoints" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets_needed/caso3.waypoints" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets_needed/connection_mode.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets_needed/connection_mode.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/DetectorClass.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/DetectorClass.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/MapFrameClass.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/MapFrameClass.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,23 +27,30 @@
     <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectId" id="2JJHA77yjKpW3jwUXgNAgQYLaPK" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "C:/Users/USER/Documents/Miguel/pruebaCirco/Gate/GateDEE",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/USER/Documents/Miguel/pruebaCirco/Autopiloto/ddd&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Python.circus">
     <configuration name="DetectorClass" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="DroneCircusDEE" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -97,5 +103,8 @@
       <updated>1671789119254</updated>
     </task>
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
 </project>

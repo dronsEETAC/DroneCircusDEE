@@ -305,14 +305,14 @@ class DetectorClass:
             self.map.mark_at_home()
             messagebox.showwarning("Success", "Ya estamos en casa", parent=self.master)
             self.return_home_button.grid_forget()
-            self.close_button2.grid(
+            '''self.close_button2.grid(
                 row=2,
                 column=0,
                 columnspan=3,
                 padx=5,
                 pady=5,
                 sticky=tk.N + tk.S + tk.E + tk.W,
-            )
+            )'''
 
             # return to the initial situation
             self.connect_button["bg"] = "#CC3636"
@@ -338,16 +338,31 @@ class DetectorClass:
         # does not allow to connect if the level of difficulty is not fixed
         if self.select_scenario_button["bg"] == "#367E18":
             if self.connection_mode == 'global':
-                broker_address = "broker.hivemq.com"
-                broker_port = 8000
+                # in global mode, the external broker must be running in internet
+                # and must operate with websockets
+                # there are several options:
+                # a public broker
+                external_broker_address = "broker.hivemq.com"
+                # our broker (that requires credentials)
+                #external_broker_address = "classpip.upc.edu"
+                # a mosquitto broker running at localhost (only in simulation mode)
+                #external_broker_address = "localhost"
+
             else:
-                broker_address = "localhost"
-                broker_port = 9001
+                # in local mode, the external broker will run always in localhost
+                # (either in production or simulation mode)
+                external_broker_address = "localhost"
+
+            # the external broker must run always in port 8000
+            external_broker_port = 8000
+
 
             self.client = mqtt.Client("Detector", transport="websockets")
             self.client.on_message = self.on_message
-            self.client.connect(broker_address, broker_port)
+            print ('voy a conectarme al broker en modo ', self.connection_mode)
+            self.client.connect(external_broker_address, external_broker_port)
             self.client.loop_start()
+            print('ya estoy conectado')
             self.close_button2.grid_forget()
             self.client.subscribe("autopilotService/droneCircus/#")
             self.client.publish("droneCircus/autopilotService/connectPlatform")
@@ -363,10 +378,12 @@ class DetectorClass:
         self.select_connection_mode_window.destroy()
         self.connect()
 
+
     def local_mode(self):
         self.connection_mode = 'local'
         self.select_connection_mode_window.destroy()
         self.connect()
+
     def select_connection_mode (self):
         self.select_connection_mode_window = tk.Toplevel(self.master)
         self.select_connection_mode_window.title("Select connection mode")
@@ -849,5 +866,4 @@ class DetectorClass:
     def return_home(self):
         self.returning = True
         self.direction = "Volviendo a casa"
-        self.client.subscribe("droneCircus/autopilotService/go", "South")
-        self.client.publish("RTL")
+        self.client.publish("droneCircus/autopilotService/returnToLaunch")
