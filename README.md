@@ -1,43 +1,31 @@
 # Drone Circus 
-![software-arch](https://user-images.githubusercontent.com/32190349/155320787-f8549148-3c93-448b-b79a-388623ca5d3f.png)
-
-## Demo   
-[Drone Engineering Ecosystem demo](https://www.youtube.com/playlist?list=PL64O0POFYjHpXyP-T063RdKRJXuhqgaXY) 
-
-## What is drone Circus?
-The Drone Circus is an intuitive way to use your hands to control the drone without the need of typing anything. 
-You can control the drone by means of the software Mission Planner, where you can download it 
-[here](https://ardupilot.org/planner/docs/mission-planner-installation.html).
-To run it, you'll need:
-- Run the CameraController module  found in [here](https://github.com/dronsEETAC/CameraControllerDEE)
-- Run the LEDsController module found in [here](https://github.com/dronsEETAC/LEDsControllerDEE)
-- Run the AutopilotController module found in [here](https://github.com/dronsEETAC/DroneAutopilotDEE) 
-- Run the Gate module found in [here](https://github.com/dronsEETAC/GateDEE) 
-(remember to use an interpreter of Python 2.X for the Autopilot, otherwise it won't work)
-- Run the DroneCircus (this repository)
-
-## Installing the needed packages for the circus
-
-1) You can download all the needed libraries in a virtual environment:
-
-`python3 -m venv /path/to/new/virtual/environment`
-
-2) And then install the libraries:
-
-`pip install -r requirements.txt`
-
-If you want to install all the libraries locally, don't create a virtual environment and just use command 2)
+![gallery](https://user-images.githubusercontent.com/100842082/209651156-2c3cd627-aecb-4f25-bc12-530bbab7edde.png)
 
 
-Then, you must run the LEDs module, the Autopilot module, the Camera module and the gate module.
-When they are all running (remember to run the autopilot in a different window with a Python interpreter 2.X),
-then run the Circus.
+## What is Drone Circus?
+Drone Circus is a front-end desktop application developed in Python and Tkinter that allows to control the drone platform in different ways (for example, with the voice or with body poses).  
+It is aimed at allowing the audience participating in the exhibition to interact with the drone in a safe and fun way.
 
 
-## Example and tutorials
+## Installation
+This video will help you in the process of installation. Basically you need to:   
+1. Clone the repo in your computer
+2. Create a new Pycharm project with the downloaded codem using Pythion 3.7 interpreter
+3. Install the requirements
+   
+To run the Drone Circus you need also to install and run the Autopilot service. Review the instructions of the corresponding repo.  
+Depending on the connection mode you will need also a mosquitto broker running in your computer. Review the information on connection modes in the main repo of the Drone Engineering Ecosystem.  
+Future versions of the Drone Circus may also need the Camera service or the Monitor.   
 
-The basics of MQTT can be found here:   
-[MQTT](https://www.youtube.com/watch?v=EIxdz-2rhLs)
+## Demo
+You can see here a demo on how to run the Drone Circus. This is a summary of what you can see in the video:  
+1. Start the mosquitto broker in our local host. Look at the configuration file, that specifies that the broker will be listening in port 1884 (this is the broker that will be user as internal broker for on-board services) and in port 8000 using websockets (this is the broker that can be used as external broker).  
+2. Start mission planner. Then initiate the simulartor. You can see that before initiating the simulator we can chose the initial position of the drone that will be simulated. Then we go to the plan panel and select FENCE option. Here we can select three possible scenarios. In case A only an inclusion fence in the form of a rectangle is activated. In this case the drone cannot exit the area closed by the rectangle, but can move without restrictions inside the rectangle. Is case B there is and obstacle in the middle of the rectangle (a exclusion geofence). The drone cannot cross through this object. In case C threre are three obstables to be avoided. We chose case C. Do not forguet to write the scenario in the autopilot and to activate the geofence, as you can see in the video.
+3. Run the Autopilot service. Note how do we specify two parameters for the Autopilot service. The first parameter is the connection mode, that can be local or gobal. We will use global. The second parameter is the operation mode, that can be simulation (our case) or prodution (when the Autopilot service is running on-board). The Autopilot servide will use the public broker at "broker.hivemq.com" as external broker. It also connect to the local broker "localhost:1884" that is used as internal broker, although this broker is not needed in this demo. You can see how the local broker indicates that the Autopilot service has been connected.
+4. Run the Drone Circus. Note that it must use also "broker.hivemq.com" as external broker. The Drone Circus allows a varity of options to guide the drone in different ways. In this case we chose to guide with fingers. The number of fingers detected to by the laptop camera will determine the operation of the drone (go North, South, Est, West, Stop, Drop an object of Return home). You must choose the scenario, that obviously must be the same that was selected in Mission Planner (case C). Then you can practice the movements. The mission is to guide the drone to the baby, drop an object and return home. 
+5. Once you have enough practice, you must conect with the drone (the Mission Planner simulator). Note that you must select the connection mode, that in this case must be global (we decided that when we run the Autopilot service). Then the drone connects. You must arm and take off. Then you can guide the drone again but now you can see how we are moving the drone in the simulator, exactly in the same way we would do in production mode, with the real drone platform.
+5. Finally, you can see other options such as guide the drone with your voice, your body poses or your face gestures.
 
-This is a good example to start using MQTT (using a public broker):    
-[Example](https://www.youtube.com/watch?v=kuyCd53AOtg)
+
+
+
