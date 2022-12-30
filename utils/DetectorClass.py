@@ -64,42 +64,6 @@ class DetectorClass:
         self.father_frame = father_frame
         self.mode = mode
 
-        # use this when simulating the system using the mosquitto broker installed in your PC
-        # broker_address = "localhost"
-
-        # use this when connecting with the RPi
-        # broker_address = "10.10.10.1"
-
-        # use one of these when simulating the system in case you do not have a mosquitto broker installed in your PC
-
-        '''global_broker_address = "broker.hivemq.com"
-        global_broker_port = 8000
-
-        local_broker_address = "broker.emqx.io"
-        local_broker_port = 8083
-
-        global_broker_address = "localhost"
-        global_broker_port = 9001
-
-        local_broker_address = "localhost"
-        local_broker_port = 1883
-
-        mode = 'global'
-
-        if mode == 'global':
-            broker_address = global_broker_address
-            broker_port = global_broker_port
-        else:
-            broker_address = local_broker_address
-            broker_port = local_broker_port
-
-        self.client = mqtt.Client("Detector", transport="websockets")
-        self.client.on_message = self.on_message
-        self.client.connect(broker_address, broker_port)
-        self.client.loop_start()
-        #self.client.publish("droneCircus/gate/connectPlatform")'''
-
-
         if self.mode == 'fingers':
             self.detector = FingerDetector()
         elif self.mode == 'pose':
@@ -365,7 +329,7 @@ class DetectorClass:
             print('ya estoy conectado')
             self.close_button2.grid_forget()
             self.client.subscribe("autopilotService/droneCircus/#")
-            self.client.publish("droneCircus/autopilotService/connectPlatform")
+            self.client.publish("droneCircus/autopilotService/connect")
         else:
             messagebox.showwarning(
                 "Error",
