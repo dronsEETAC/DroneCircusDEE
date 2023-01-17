@@ -1,3 +1,4 @@
+import json
 import math
 import threading
 import time
@@ -88,8 +89,7 @@ class DetectorClass:
         self.top_frame.rowconfigure(2, weight=1)
         self.top_frame.rowconfigure(3, weight=1)
 
-        # state can be: initial, practising, flying, closed
-        self.state = "initial"
+
 
         # level can be easy or difficult
         self.level = "easy"
@@ -216,6 +216,8 @@ class DetectorClass:
         self.bottom_frame.grid(
             row=1, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
         )
+        self.connected = False
+        self.state = 'disconnected'
 
         return self.master
 
@@ -233,19 +235,21 @@ class DetectorClass:
         origin = splited[0]
         destination = splited[1]
         command = splited[2]
+        '''
 
         if command == "connected":
+
             self.connect_button["text"] = "connected"
             self.connect_button["bg"] = "#367E18"
-            self.client.subscribe(origin + "/" + destination + "/" + "homePosition")
+            #self.client.subscribe(origin + "/" + destination + "/" + "homePosition")
             self.client.publish(destination + "/" + origin + "/" + "getHomePosition")
 
         if command == "armed":
             self.arm_button["text"] = "armed"
             self.arm_button["bg"] = "#367E18"
-            self.client.subscribe(origin + "/" + destination + "/" + "armed")
+            #self.client.subscribe(origin + "/" + destination + "/" + "armed")
 
-        if command == "takenOff":
+        if command == "flying":
             self.take_off_button["text"] = "flying"
             self.take_off_button["bg"] = "#367E18"
             self.client.publish(
@@ -269,16 +273,14 @@ class DetectorClass:
             self.map.mark_at_home()
             messagebox.showwarning("Success", "Ya estamos en casa", parent=self.master)
             self.return_home_button.grid_forget()
-            '''self.close_button2.grid(
+            self.close_button2.grid(
                 row=2,
                 column=0,
                 columnspan=3,
                 padx=5,
                 pady=5,
                 sticky=tk.N + tk.S + tk.E + tk.W,
-            )'''
-
-            # return to the initial situation
+            )
             self.connect_button["bg"] = "#CC3636"
             self.connect_button["text"] = "Connect"
             self.arm_button["bg"] = "#CC3636"
@@ -286,6 +288,7 @@ class DetectorClass:
             self.take_off_button["bg"] = "#CC3636"
             self.take_off_button["text"] = "TakeOff"
             self.state = "initial"
+            self.client.publish("droneCircus/monitor/stop")
 
         if command == "homePosition":
             position_str = str(message.payload.decode("utf-8"))
@@ -297,6 +300,70 @@ class DetectorClass:
             position_str = str(message.payload.decode("utf-8"))
             position = position_str.split("*")
             self.map.move_drone(position)
+            '''
+        if command == "telemetryInfo":
+            telemetry_info = json.loads(message.payload)
+            lat = telemetry_info['lat']
+            lon = telemetry_info['lon']
+            state = telemetry_info['state']
+            if state == 'connected' and self.state != 'connected':
+                self.connect_button["text"] = "disconnect"
+                self.connect_button["bg"] = "#367E18"
+                self.show_map((lat,lon))
+                self.state = 'connected'
+            elif state == 'armed':
+                self.arm_button["text"] = "armed"
+                self.arm_button["bg"] = "#367E18"
+                self.state = 'armed'
+            elif state == "flying" and self.state != 'flying':
+                self.take_off_button["text"] = "flying"
+                self.take_off_button["bg"] = "#367E18"
+                self.client.publish(
+                        destination + "/" + origin + "/" + "guideManually", "Stop"
+                )
+                self.state = "flying"
+                # this thread will start taking images and detecting patterns to guide the drone
+                x = threading.Thread(target=self.flying)
+                x.start()
+                self.return_home_button.grid(
+                        row=2,
+                        column=0,
+                        padx=5,
+                        columnspan=3,
+                        pady=5,
+                        sticky=tk.N + tk.S + tk.E + tk.W,
+                )
+            elif state == "flying" and self.state == 'flying':
+                self.map.move_drone((lat,lon), 'red')
+            elif state == "returningHome":
+                self.map.move_drone((lat, lon), 'brown')
+                self.state = 'returningHome'
+            elif state == "onHearth" and self.state != 'onHearth' and self.state != 'disconnected':
+                # the dron completed the RTL
+                self.map.mark_at_home()
+                messagebox.showwarning("Success", "Ya estamos en casa", parent=self.master)
+                self.return_home_button.grid_forget()
+                '''self.close_button2.grid(
+                    row=2,
+                    column=0,
+                    columnspan=3,
+                    padx=5,
+                    pady=5,
+                    sticky=tk.N + tk.S + tk.E + tk.W,
+                )'''
+
+                # return to the initial situation
+                #self.connect_button["bg"] = "#CC3636"
+                #self.connect_button["text"] = "Connect"
+                self.arm_button["bg"] = "#CC3636"
+                self.arm_button["text"] = "Arm"
+                self.take_off_button["bg"] = "#CC3636"
+                self.take_off_button["text"] = "TakeOff"
+                self.return_home_button['text'] = "Retorna"
+                self.return_home_button['bg'] = '#CC3636'
+                self.state = "onHearth"
+                self.client.publish("droneCircus/monitor/stop")
+
 
     def connect(self):
         # does not allow to connect if the level of difficulty is not fixed
@@ -306,15 +373,18 @@ class DetectorClass:
                 # and must operate with websockets
                 # there are several options:
                 # a public broker
-                external_broker_address = "broker.hivemq.com"
+                #external_broker_address = "broker.hivemq.com"
                 # our broker (that requires credentials)
                 #external_broker_address = "classpip.upc.edu"
                 # a mosquitto broker running at localhost (only in simulation mode)
-                #external_broker_address = "localhost"
+                external_broker_address = "localhost"
 
             else:
                 # in local mode, the external broker will run always in localhost
                 # (either in production or simulation mode)
+                # use this when connecting with the RPi
+                #external_broker_address = "10.10.10.1"
+
                 external_broker_address = "localhost"
 
             # the external broker must run always in port 8000
@@ -326,10 +396,13 @@ class DetectorClass:
             print ('voy a conectarme al broker en modo ', self.connection_mode)
             self.client.connect(external_broker_address, external_broker_port)
             self.client.loop_start()
-            print('ya estoy conectado')
+            self.connected = True
             self.close_button2.grid_forget()
             self.client.subscribe("autopilotService/droneCircus/#")
             self.client.publish("droneCircus/autopilotService/connect")
+            self.client.publish("droneCircus/monitor/start")
+            self.connect_button['text'] = 'connecting ...'
+            self.connect_button['bg'] = 'orange'
         else:
             messagebox.showwarning(
                 "Error",
@@ -349,43 +422,61 @@ class DetectorClass:
         self.connect()
 
     def select_connection_mode (self):
-        self.select_connection_mode_window = tk.Toplevel(self.master)
-        self.select_connection_mode_window.title("Select connection mode")
-        self.select_connection_mode_window.geometry("1200x500")
-        select_connection_mode_frame = tk.Frame(self.select_connection_mode_window)
-        select_connection_mode_frame.pack()
-        select_connection_mode_frame.rowconfigure(0, weight=1)
-        select_connection_mode_frame.rowconfigure(1, weight=1)
-        select_connection_mode_frame.columnconfigure(0, weight=1)
-        select_connection_mode_frame.columnconfigure(1, weight=1)
+        if not self.connected:
+            self.select_connection_mode_window = tk.Toplevel(self.master)
+            self.select_connection_mode_window.title("Select connection mode")
+            self.select_connection_mode_window.geometry("1200x500")
+            select_connection_mode_frame = tk.Frame(self.select_connection_mode_window)
+            select_connection_mode_frame.pack()
+            select_connection_mode_frame.rowconfigure(0, weight=1)
+            select_connection_mode_frame.rowconfigure(1, weight=1)
+            select_connection_mode_frame.columnconfigure(0, weight=1)
+            select_connection_mode_frame.columnconfigure(1, weight=1)
 
-        self.image1 = Image.open("../assets_needed/connection_mode.png")
-        self.image1 = self.image1.resize((1100, 450), Image.ANTIALIAS)
-        self.bg1 = ImageTk.PhotoImage(self.image1)
-        canvas1 = tk.Canvas( select_connection_mode_frame, width=1100, height=450)
-        canvas1.create_image(0, 0, image=self.bg1, anchor="nw")
-        canvas1.grid(row=0, column=0, padx=5, pady=5, columnspan = 2, sticky=tk.N + tk.S + tk.E + tk.W)
+            self.image1 = Image.open("../assets_needed/connection_mode.png")
+            self.image1 = self.image1.resize((1100, 450), Image.ANTIALIAS)
+            self.bg1 = ImageTk.PhotoImage(self.image1)
+            canvas1 = tk.Canvas( select_connection_mode_frame, width=1100, height=450)
+            canvas1.create_image(0, 0, image=self.bg1, anchor="nw")
+            canvas1.grid(row=0, column=0, padx=5, pady=5, columnspan = 2, sticky=tk.N + tk.S + tk.E + tk.W)
 
-        self.global_button = tk.Button(
-            select_connection_mode_frame,
-            text="Global",
-            bg="#CC3636",
-            fg="white",
-            command=self.global_mode,
-        )
-        self.global_button.grid(
-            row=1, column=0, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
-        )
-        self.local_button = tk.Button(
-            select_connection_mode_frame,
-            text="Local",
-            bg="#CC3636",
-            fg="white",
-            command=self.local_mode,
-        )
-        self.local_button.grid(
-            row=1, column=1, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
-        )
+            self.global_button = tk.Button(
+                select_connection_mode_frame,
+                text="Global",
+                bg="#CC3636",
+                fg="white",
+                command=self.global_mode,
+            )
+            self.global_button.grid(
+                row=1, column=0, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+            )
+            self.local_button = tk.Button(
+                select_connection_mode_frame,
+                text="Local",
+                bg="#CC3636",
+                fg="white",
+                command=self.local_mode,
+            )
+            self.local_button.grid(
+                row=1, column=1, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+            )
+        elif self.state != 'flying':
+            self.connect_button['text'] = 'connect'
+            self.connect_button['bg'] = "#CC3636",
+            self.client.publish("droneCircus/autopilotService/disconnect")
+            #self.cap.release()
+            self.client.loop_stop()
+            self.client.disconnect()
+            self.connected = False
+            self.state = 'disconnected'
+        else:
+            messagebox.showwarning(
+                "Error",
+                "No puedes desconectar. Estas volando",
+                parent=self.master,
+            )
+
+
 
     def set_level(self):
         self.select_level_window = tk.Toplevel(self.master)
@@ -491,40 +582,72 @@ class DetectorClass:
         )
 
     def arm(self):
+        print ('voy a armar ', self.state)
         # do not allow arming if destination is not fixed
-        if self.connect_button["bg"] == "#367E18":
-            self.client.subscribe("autopilotService/droneCircus/armed")
+        if self.state == "connected":
             self.client.publish("droneCircus/autopilotService/armDrone")
-        else:
-            messagebox.showwarning(
-                "Error", "Antes de armar, debes conectar", parent=self.master
+            self.arm_button["bg"] == "orange"
+            self.arm_button["text"] == "arming ..."
+        elif self.state == 'disconnected':
+            messagebox.showwarning("Error", "Antes de armar, debes conectar", parent=self.master
+            )
+        elif self.state == 'flying':
+            messagebox.showwarning("Error", "Ya estas volando", parent=self.master
             )
 
+
     def take_off(self):
+        print ('voy a despegar ', self.state)
         # do not allow taking off if not armed
-        if self.arm_button["bg"] == "#367E18":
-            self.client.subscribe("autopilotService/droneCircus/takenOff")
-            self.client.subscribe("autopilotService/droneCircus/dronePosition")
+        if self.state == "armed":
             self.client.publish("droneCircus/autopilotService/takeOff")
-        else:
+            self.take_off_button["text"] = "taking off ..."
+            self.take_off_button["bg"] = "orange"
+        elif self.state == 'flying':
+            messagebox.showwarning(
+                "Error", "Ya estas volando", parent=self.master
+            )
+        elif self.state == 'connected' or self.state == 'disconnected':
             messagebox.showwarning(
                 "Error", "Antes de despegar, debes armar", parent=self.master
             )
 
     def close(self):
-        # this will stop the video stream thread
-        self.state = "closed"
-        self.cap.release()
-        self.client.loop_stop()
-        self.client.disconnect()
-        self.father_frame.destroy()
-        cv2.destroyAllWindows()
-        cv2.waitKey(1)
+        if self.state == 'disconnected':
+            # this will stop the video stream thread
+            self.state = "closed"
+            self.cap.release()
+            print ('cap release done')
+            '''
+            #self.client.loop_stop()
+            #self.client.disconnect()
+    
+            #cv2.destroyAllWindows()
+            #cv2.waitKey(1)
+    
+            self.client.publish("droneCircus/autopilotService/disconnect")
+            # self.cap.release()
+            #self.client.loop_stop()
+    
+            #self.client.disconnect()
+            time.sleep(5)
+            self.client.loop_stop()
+            self.client.disconnect()
+            self.connected = False
+            self.state = 'disconnected'
+            '''
+
+            self.father_frame.destroy()
+        else:
+            messagebox.showwarning(
+                "Error", "Antes de salir debes desconectar", parent=self.master
+            )
+
 
 
     def practice(self):
         print ('vamos')
-        if self.state == "initial":
+        if self.state == "disconnected":
             # start practising
             self.practice_button["bg"] = "#367E18"
             self.practice_button["text"] = "Estoy preparado. Quiero volar"
@@ -535,7 +658,7 @@ class DetectorClass:
 
         elif self.state == "practising":
             # stop the video stream thread for practice
-            self.state = "closed"
+            self.state = "disconnected"
 
             self.practice_button.grid_forget()
 
@@ -828,6 +951,15 @@ class DetectorClass:
         cv2.waitKey(1)
 
     def return_home(self):
-        self.returning = True
-        self.direction = "Volviendo a casa"
-        self.client.publish("droneCircus/autopilotService/returnToLaunch")
+        if self.state == 'flying':
+            self.returning = True
+            self.direction = "Volviendo a casa"
+            self.return_home_button['text'] ="Volviendo a casa"
+            self.return_home_button['bg'] = 'orange'
+
+            self.client.publish("droneCircus/autopilotService/returnToLaunch")
+        else:
+            messagebox.showwarning(
+                "Error", "No estas volando", parent=self.master
+            )
+

@@ -172,10 +172,10 @@ class MapFrameClass:
 
 
 
-    def move_drone(self, position):
+    def move_drone(self, position, color):
         self.drone_x, self.drone_y = self.converter.convert(position)
 
-        self.canvas.itemconfig(self.point, fill="red")
+        self.canvas.itemconfig(self.point, fill=color)
 
         self.canvas.coords(
             self.point, self.drone_x - 8, self.drone_y - 8, self.drone_x + 8, self.drone_y + 8)

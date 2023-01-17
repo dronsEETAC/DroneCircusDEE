@@ -130,6 +130,7 @@ def bye():
 def enter():
     mixer.music.stop()
     mixer.music.load("../assets_needed/redoble.mp3")  # Loading Music File
+
     mixer.music.play(10)
     new_window = Toplevel(root)
     new_window.title("Select")
@@ -141,6 +142,7 @@ def enter():
     new_window.rowconfigure(0, weight=1)
     new_window.rowconfigure(1, weight=1)
     new_window.rowconfigure(2, weight=1)
+
 
     image2 = Image.open("../assets_needed/gallery.png")
     image2 = image2.resize((1100, 500), Image.ANTIALIAS)
