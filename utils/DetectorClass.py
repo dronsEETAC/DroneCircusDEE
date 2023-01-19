@@ -235,72 +235,7 @@ class DetectorClass:
         origin = splited[0]
         destination = splited[1]
         command = splited[2]
-        '''
 
-        if command == "connected":
-
-            self.connect_button["text"] = "connected"
-            self.connect_button["bg"] = "#367E18"
-            #self.client.subscribe(origin + "/" + destination + "/" + "homePosition")
-            self.client.publish(destination + "/" + origin + "/" + "getHomePosition")
-
-        if command == "armed":
-            self.arm_button["text"] = "armed"
-            self.arm_button["bg"] = "#367E18"
-            #self.client.subscribe(origin + "/" + destination + "/" + "armed")
-
-        if command == "flying":
-            self.take_off_button["text"] = "flying"
-            self.take_off_button["bg"] = "#367E18"
-            self.client.publish(
-                destination + "/" + origin + "/" + "guideManually", "Stop"
-            )
-            self.state = "flying"
-            # this thread will start taking images and detecting patterns to guide the drone
-            x = threading.Thread(target=self.flying)
-            x.start()
-            self.return_home_button.grid(
-                row=2,
-                column=0,
-                padx=5,
-                columnspan=3,
-                pady=5,
-                sticky=tk.N + tk.S + tk.E + tk.W,
-            )
-
-        if command == "atHome":
-            # the dron completed the RTL
-            self.map.mark_at_home()
-            messagebox.showwarning("Success", "Ya estamos en casa", parent=self.master)
-            self.return_home_button.grid_forget()
-            self.close_button2.grid(
-                row=2,
-                column=0,
-                columnspan=3,
-                padx=5,
-                pady=5,
-                sticky=tk.N + tk.S + tk.E + tk.W,
-            )
-            self.connect_button["bg"] = "#CC3636"
-            self.connect_button["text"] = "Connect"
-            self.arm_button["bg"] = "#CC3636"
-            self.arm_button["text"] = "Arm"
-            self.take_off_button["bg"] = "#CC3636"
-            self.take_off_button["text"] = "TakeOff"
-            self.state = "initial"
-            self.client.publish("droneCircus/monitor/stop")
-
-        if command == "homePosition":
-            position_str = str(message.payload.decode("utf-8"))
-            position = position_str.split("*")
-            self.show_map(position)
-            self.client.subscribe(origin + "/" + destination + "/" + "dronePosition")
-
-        if command == "dronePosition":
-            position_str = str(message.payload.decode("utf-8"))
-            position = position_str.split("*")
-            self.map.move_drone(position)
-            '''
         if command == "telemetryInfo":
             telemetry_info = json.loads(message.payload)
             lat = telemetry_info['lat']
@@ -343,18 +278,8 @@ class DetectorClass:
                 self.map.mark_at_home()
                 messagebox.showwarning("Success", "Ya estamos en casa", parent=self.master)
                 self.return_home_button.grid_forget()
-                '''self.close_button2.grid(
-                    row=2,
-                    column=0,
-                    columnspan=3,
-                    padx=5,
-                    pady=5,
-                    sticky=tk.N + tk.S + tk.E + tk.W,
-                )'''
 
-                # return to the initial situation
-                #self.connect_button["bg"] = "#CC3636"
-                #self.connect_button["text"] = "Connect"
+
                 self.arm_button["bg"] = "#CC3636"
                 self.arm_button["text"] = "Arm"
                 self.take_off_button["bg"] = "#CC3636"
@@ -613,7 +538,7 @@ class DetectorClass:
             )
 
     def close(self):
-        if self.state == 'disconnected':
+        if self.state == 'disconnected' or self.state== 'practising':
             # this will stop the video stream thread
             self.state = "closed"
             self.cap.release()
@@ -646,7 +571,7 @@ class DetectorClass:
 
 
     def practice(self):
-        print ('vamos')
+        print ('vamos ')
         if self.state == "disconnected":
             # start practising
             self.practice_button["bg"] = "#367E18"
@@ -790,21 +715,20 @@ class DetectorClass:
             if self.selected_level == 'Basico' \
                     and self.dronLabLimits.contains(Point(lat2,lon2)):
                 self.practicePoint = [lat2,lon2]
-                self.map.move_drone([lat2,lon2])
+                self.map.move_drone([lat2,lon2], 'red')
 
             elif self.selected_level == 'Medio' \
                     and self.dronLabLimits.contains(Point(lat2, lon2)) \
                     and not self.obstacle_1.contains(Point(lat2, lon2)) :
                 self.practicePoint = [lat2, lon2]
-                self.map.move_drone([lat2, lon2])
+                self.map.move_drone([lat2, lon2], 'red')
 
             elif self.dronLabLimits.contains(Point(lat2, lon2)) \
                     and not self.obstacle_2_1.contains(Point(lat2, lon2)) \
                     and not self.obstacle_2_2.contains(Point(lat2, lon2)) \
                     and not self.obstacle_2_3.contains(Point(lat2, lon2)):
                 self.practicePoint = [lat2, lon2]
-                self.map.move_drone([lat2, lon2])
-
+                self.map.move_drone([lat2, lon2], 'red')
 
     def practising(self):
 
@@ -865,6 +789,7 @@ class DetectorClass:
                 img = cv2.resize(image, (800, 600))
                 img = cv2.flip(img, 1)
                 code, img = self.detector.detect(img, self.level)
+                #print ('estoy enviando imagenes ', code)
                 # if user changed the pattern we will ignore the next 8 video frames
                 if (code != prevCode):
                     cont = 4
