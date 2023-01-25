@@ -18,7 +18,10 @@ Depending on the connection mode you will need also a mosquitto broker running i
 Future versions of the Drone Circus may also need the Camera service or the Monitor.   
 
 ## Demo
-You can see here a demo on how to run the Drone Circus. This is a summary of what you can see in the video:  
+You can see here a demo on how to run the Drone Circus.    
+[Drone Circus in action](https://youtu.be/THVDBR6tlTI)    
+
+This is a summary of what you can see in the video:  
 1. Start the mosquitto broker in our local host. Look at the configuration file, that specifies that the broker will be listening in port 1884 (this is the broker that will be user as internal broker for on-board services) and in port 8000 using websockets (this is the broker that can be used as external broker).  
 2. Start mission planner. Then initiate the simulartor. You can see that before initiating the simulator we can chose the initial position of the drone that will be simulated. Then we go to the plan panel and select FENCE option. Here we can select three possible scenarios. In case A only an inclusion fence in the form of a rectangle is activated. In this case the drone cannot exit the area closed by the rectangle, but can move without restrictions inside the rectangle. Is case B there is and obstacle in the middle of the rectangle (a exclusion geofence). The drone cannot cross through this object. In case C threre are three obstables to be avoided. We chose case C. Do not forguet to write the scenario in the autopilot and to activate the geofence, as you can see in the video.
 3. Run the Autopilot service. Note how do we specify two parameters for the Autopilot service. The first parameter is the connection mode, that can be local or gobal. We will use global. The second parameter is the operation mode, that can be simulation (our case) or prodution (when the Autopilot service is running on-board). The Autopilot servide will use the public broker at "broker.hivemq.com" as external broker. It also connect to the local broker "localhost:1884" that is used as internal broker, although this broker is not needed in this demo. You can see how the local broker indicates that the Autopilot service has been connected.
