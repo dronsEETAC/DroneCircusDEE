@@ -31,4 +31,10 @@ This is a summary of what you can see in the video:
 
 
 
+## Installation and contribution
+In order to run and contribute to this module you need Pythion 3.7. We recommend PyCharm as IDE for development.       
+To contribute to must follow the contribution protocol describen in the main repo of the Drone Engineering Ecosystem.
+[![DroneEngineeringEcosystem Badge](https://img.shields.io/badge/DEE-MainRepo-brightgreen.svg)](https://github.com/dronsEETAC/DroneEngineeringEcosystemDEE)
+
+
 
