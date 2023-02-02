@@ -143,7 +143,6 @@ def enter():
     new_window.rowconfigure(1, weight=1)
     new_window.rowconfigure(2, weight=1)
 
-
     image2 = Image.open("../assets_needed/gallery.png")
     image2 = image2.resize((1100, 500), Image.ANTIALIAS)
     bg2 = ImageTk.PhotoImage(image2)
