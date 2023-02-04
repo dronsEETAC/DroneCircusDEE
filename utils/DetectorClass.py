@@ -298,19 +298,19 @@ class DetectorClass:
                 # and must operate with websockets
                 # there are several options:
                 # a public broker
-                #external_broker_address = "broker.hivemq.com"
+                external_broker_address = "broker.hivemq.com"
                 # our broker (that requires credentials)
                 #external_broker_address = "classpip.upc.edu"
                 # a mosquitto broker running at localhost (only in simulation mode)
-                external_broker_address = "localhost"
+                #external_broker_address = "localhost"
 
             else:
                 # in local mode, the external broker will run always in localhost
                 # (either in production or simulation mode)
                 # use this when connecting with the RPi
-                #external_broker_address = "10.10.10.1"
+                external_broker_address = "10.10.10.1"
 
-                external_broker_address = "localhost"
+                #external_broker_address = "localhost"
 
             # the external broker must run always in port 8000
             external_broker_port = 8000
