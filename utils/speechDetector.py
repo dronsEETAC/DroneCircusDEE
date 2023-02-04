@@ -1,12 +1,14 @@
 import speech_recognition as sr
 import cv2
 
+
 class SpeechDetector:
     def __init__(self):
         self.r = sr.Recognizer()
-    def detect (self, level):
+
+    def detect(self, level):
         with sr.Microphone() as source:
-            print ('habla')
+            print("habla")
             audio = self.r.listen(source, phrase_time_limit=1)
             try:
                 # for testing purposes, we're just using the default API key
@@ -14,42 +16,39 @@ class SpeechDetector:
                 # instead of `r.recognize_google(audio)`
                 voice = self.r.recognize_google(audio, language="es-ES")
             except sr.UnknownValueError:
-                voice = '?????'
+                voice = "?????"
             voice = voice.capitalize()
-            print ('has dicho ', voice)
+            print("has dicho ", voice)
         code = -1
-        if level == 'easy':
-            if voice == 'Norte':
+        if level == "easy":
+            if voice == "Norte":
                 code = 1
-            elif voice == 'Sur':
+            elif voice == "Sur":
                 code = 2
-            elif voice == 'Este':
+            elif voice == "Este":
                 code = 3
-            elif voice == 'Oeste':
+            elif voice == "Oeste":
                 code = 4
-            elif voice == 'Drop':
+            elif voice == "Drop":
                 code = 5
-            elif voice == 'Retorna':
+            elif voice == "Retorna":
                 code = 6
-            elif voice == 'Para':
+            elif voice == "Para":
                 code = 0
         else:
-            if voice == 'Gazpacho':
+            if voice == "Gazpacho":
                 code = 1
-            elif voice == 'Luna':
+            elif voice == "Luna":
                 code = 2
-            elif voice == 'Platano':
+            elif voice == "Platano":
                 code = 3
-            elif voice == 'Amigo':
+            elif voice == "Amigo":
                 code = 4
-            elif voice == 'Vamos':
+            elif voice == "Vamos":
                 code = 5
-            elif voice == 'Casa':
+            elif voice == "Casa":
                 code = 6
-            elif voice == 'Castillo':
+            elif voice == "Castillo":
                 code = 0
 
         return code, voice
-
-
-

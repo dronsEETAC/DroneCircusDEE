@@ -20,7 +20,6 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
 
-
 class DetectorClass:
     def __init__(self):
         self.father_frame = None
@@ -65,16 +64,16 @@ class DetectorClass:
         self.father_frame = father_frame
         self.mode = mode
 
-        if self.mode == 'fingers':
+        if self.mode == "fingers":
             self.detector = FingerDetector()
-        elif self.mode == 'pose':
+        elif self.mode == "pose":
             self.detector = PoseDetector()
-        elif self.mode == 'voice':
+        elif self.mode == "voice":
             self.detector = SpeechDetector()
         else:
             self.detector = FaceDetector()
 
-        if self.mode != 'voice':
+        if self.mode != "voice":
             self.cap = cv2.VideoCapture(0)
 
         self.master = tk.Frame(self.father_frame)
@@ -89,17 +88,11 @@ class DetectorClass:
         self.top_frame.rowconfigure(2, weight=1)
         self.top_frame.rowconfigure(3, weight=1)
 
-
-
         # level can be easy or difficult
         self.level = "easy"
 
         self.easy_button = tk.Button(
-            self.top_frame,
-            text="Fácil",
-            bg="#367E18",
-            fg="white",
-            command=self.easy
+            self.top_frame, text="Fácil", bg="#367E18", fg="white", command=self.easy
         )
         self.easy_button.grid(
             row=0, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
@@ -118,9 +111,9 @@ class DetectorClass:
         self.select_scenario_button = tk.Button(
             self.top_frame,
             text="Selecciona el escenario",
-            bg='#F57328',
+            bg="#F57328",
             fg="white",
-            command=self.set_level
+            command=self.set_level,
         )
 
         # next button to be shown when scenario has been selected
@@ -142,7 +135,6 @@ class DetectorClass:
         self.button_frame.columnconfigure(0, weight=1)
         self.button_frame.columnconfigure(1, weight=1)
         self.button_frame.columnconfigure(2, weight=1)
-
 
         self.connect_button = tk.Button(
             self.button_frame,
@@ -197,12 +189,11 @@ class DetectorClass:
         # by defaulf, easy mode is selected
         self.bottom_frame = tk.LabelFrame(self.master, text="EASY")
 
-
         if self.mode == "fingers":
             self.image = Image.open("../assets_needed/dedos_faciles.png")
         elif self.mode == "pose":
             self.image = Image.open("../assets_needed/poses_faciles.png")
-        elif self.mode == 'voice':
+        elif self.mode == "voice":
             self.image = Image.open("../assets_needed/voces_faciles.png")
         else:
             self.image = Image.open("../assets_needed/caras_faciles.png")
@@ -217,7 +208,7 @@ class DetectorClass:
             row=1, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
         )
         self.connected = False
-        self.state = 'disconnected'
+        self.state = "disconnected"
 
         return self.master
 
@@ -238,69 +229,75 @@ class DetectorClass:
 
         if command == "telemetryInfo":
             telemetry_info = json.loads(message.payload)
-            lat = telemetry_info['lat']
-            lon = telemetry_info['lon']
-            state = telemetry_info['state']
-            if state == 'connected' and self.state != 'connected':
+            lat = telemetry_info["lat"]
+            lon = telemetry_info["lon"]
+            state = telemetry_info["state"]
+            if state == "connected" and self.state != "connected":
                 self.connect_button["text"] = "disconnect"
                 self.connect_button["bg"] = "#367E18"
-                self.show_map((lat,lon))
-                self.state = 'connected'
-            elif state == 'armed':
+                self.show_map((lat, lon))
+                self.state = "connected"
+            elif state == "armed":
                 self.arm_button["text"] = "armed"
                 self.arm_button["bg"] = "#367E18"
-                self.state = 'armed'
-            elif state == "flying" and self.state != 'flying':
+                self.state = "armed"
+            elif state == "flying" and self.state != "flying":
                 self.take_off_button["text"] = "flying"
                 self.take_off_button["bg"] = "#367E18"
                 self.client.publish(
-                        destination + "/" + origin + "/" + "guideManually", "Stop"
+                    destination + "/" + origin + "/" + "guideManually", "Stop"
                 )
                 self.state = "flying"
                 # this thread will start taking images and detecting patterns to guide the drone
                 x = threading.Thread(target=self.flying)
                 x.start()
                 self.return_home_button.grid(
-                        row=2,
-                        column=0,
-                        padx=5,
-                        columnspan=3,
-                        pady=5,
-                        sticky=tk.N + tk.S + tk.E + tk.W,
+                    row=2,
+                    column=0,
+                    padx=5,
+                    columnspan=3,
+                    pady=5,
+                    sticky=tk.N + tk.S + tk.E + tk.W,
                 )
-            elif state == "flying" and self.state == 'flying':
-                self.map.move_drone((lat,lon), 'red')
+            elif state == "flying" and self.state == "flying":
+                self.map.move_drone((lat, lon), "red")
             elif state == "returningHome":
-                self.map.move_drone((lat, lon), 'brown')
-                self.state = 'returningHome'
-            elif state == "onHearth" and self.state != 'onHearth' and self.state != 'disconnected':
+                self.map.move_drone((lat, lon), "brown")
+                self.state = "returningHome"
+            elif (
+                state == "onHearth"
+                and self.state != "onHearth"
+                and self.state != "disconnected"
+            ):
                 # the dron completed the RTL
                 self.map.mark_at_home()
-                messagebox.showwarning("Success", "Ya estamos en casa", parent=self.master)
+                messagebox.showwarning(
+                    "Success", "Ya estamos en casa", parent=self.master
+                )
                 self.return_home_button.grid_forget()
-
 
                 self.arm_button["bg"] = "#CC3636"
                 self.arm_button["text"] = "Arm"
                 self.take_off_button["bg"] = "#CC3636"
                 self.take_off_button["text"] = "TakeOff"
-                self.return_home_button['text'] = "Retorna"
-                self.return_home_button['bg'] = '#CC3636'
+                self.return_home_button["text"] = "Retorna"
+                self.return_home_button["bg"] = "#CC3636"
                 self.state = "onHearth"
                 self.client.publish("droneCircus/monitor/stop")
-
 
     def connect(self):
         # does not allow to connect if the level of difficulty is not fixed
         if self.select_scenario_button["bg"] == "#367E18":
-            if self.connection_mode == 'global':
+            if self.connection_mode == "global":
                 # in global mode, the external broker must be running in internet
                 # and must operate with websockets
                 # there are several options:
                 # a public broker
+
                 external_broker_address = "broker.hivemq.com"
+
                 # our broker (that requires credentials)
-                #external_broker_address = "classpip.upc.edu"
+                # external_broker_address = "classpip.upc.edu"
                 # a mosquitto broker running at localhost (only in simulation mode)
                 #external_broker_address = "localhost"
 
@@ -309,16 +306,14 @@ class DetectorClass:
                 # (either in production or simulation mode)
                 # use this when connecting with the RPi
                 external_broker_address = "10.10.10.1"
-
                 #external_broker_address = "localhost"
 
             # the external broker must run always in port 8000
-            external_broker_port = 8000
-
+            external_broker_port = 8083
 
             self.client = mqtt.Client("Detector", transport="websockets")
             self.client.on_message = self.on_message
-            print ('voy a conectarme al broker en modo ', self.connection_mode)
+            print("voy a conectarme al broker en modo ", self.connection_mode)
             self.client.connect(external_broker_address, external_broker_port)
             self.client.loop_start()
             self.connected = True
@@ -326,8 +321,8 @@ class DetectorClass:
             self.client.subscribe("autopilotService/droneCircus/#")
             self.client.publish("droneCircus/autopilotService/connect")
             self.client.publish("droneCircus/monitor/start")
-            self.connect_button['text'] = 'connecting ...'
-            self.connect_button['bg'] = 'orange'
+            self.connect_button["text"] = "connecting ..."
+            self.connect_button["bg"] = "orange"
         else:
             messagebox.showwarning(
                 "Error",
@@ -335,18 +330,17 @@ class DetectorClass:
                 parent=self.master,
             )
 
-    def global_mode (self):
-        self.connection_mode = 'global'
+    def global_mode(self):
+        self.connection_mode = "global"
         self.select_connection_mode_window.destroy()
         self.connect()
-
 
     def local_mode(self):
-        self.connection_mode = 'local'
+        self.connection_mode = "local"
         self.select_connection_mode_window.destroy()
         self.connect()
 
-    def select_connection_mode (self):
+    def select_connection_mode(self):
         if not self.connected:
             self.select_connection_mode_window = tk.Toplevel(self.master)
             self.select_connection_mode_window.title("Select connection mode")
@@ -361,9 +355,16 @@ class DetectorClass:
             self.image1 = Image.open("../assets_needed/connection_mode.png")
             self.image1 = self.image1.resize((1100, 450), Image.ANTIALIAS)
             self.bg1 = ImageTk.PhotoImage(self.image1)
-            canvas1 = tk.Canvas( select_connection_mode_frame, width=1100, height=450)
+            canvas1 = tk.Canvas(select_connection_mode_frame, width=1100, height=450)
             canvas1.create_image(0, 0, image=self.bg1, anchor="nw")
-            canvas1.grid(row=0, column=0, padx=5, pady=5, columnspan = 2, sticky=tk.N + tk.S + tk.E + tk.W)
+            canvas1.grid(
+                row=0,
+                column=0,
+                padx=5,
+                pady=5,
+                columnspan=2,
+                sticky=tk.N + tk.S + tk.E + tk.W,
+            )
 
             self.global_button = tk.Button(
                 select_connection_mode_frame,
@@ -385,23 +386,21 @@ class DetectorClass:
             self.local_button.grid(
                 row=1, column=1, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
             )
-        elif self.state != 'flying':
-            self.connect_button['text'] = 'connect'
-            self.connect_button['bg'] = "#CC3636",
+        elif self.state != "flying":
+            self.connect_button["text"] = "connect"
+            self.connect_button["bg"] = ("#CC3636",)
             self.client.publish("droneCircus/autopilotService/disconnect")
-            #self.cap.release()
+            # self.cap.release()
             self.client.loop_stop()
             self.client.disconnect()
             self.connected = False
-            self.state = 'disconnected'
+            self.state = "disconnected"
         else:
             messagebox.showwarning(
                 "Error",
                 "No puedes desconectar. Estas volando",
                 parent=self.master,
             )
-
-
 
     def set_level(self):
         self.select_level_window = tk.Toplevel(self.master)
@@ -507,60 +506,59 @@ class DetectorClass:
         )
 
     def arm(self):
-        print ('voy a armar ', self.state)
+        print("voy a armar ", self.state)
         # do not allow arming if destination is not fixed
         if self.state == "connected":
             self.client.publish("droneCircus/autopilotService/armDrone")
             self.arm_button["bg"] == "orange"
             self.arm_button["text"] == "arming ..."
-        elif self.state == 'disconnected':
-            messagebox.showwarning("Error", "Antes de armar, debes conectar", parent=self.master
+        elif self.state == "disconnected":
+            messagebox.showwarning(
+                "Error", "Antes de armar, debes conectar", parent=self.master
             )
-        elif self.state == 'flying':
-            messagebox.showwarning("Error", "Ya estas volando", parent=self.master
-            )
-
+        elif self.state == "flying":
+            messagebox.showwarning("Error", "Ya estas volando", parent=self.master)
 
     def take_off(self):
-        print ('voy a despegar ', self.state)
+        print("voy a despegar ", self.state)
         # do not allow taking off if not armed
         if self.state == "armed":
             self.client.publish("droneCircus/autopilotService/takeOff")
             self.take_off_button["text"] = "taking off ..."
             self.take_off_button["bg"] = "orange"
-        elif self.state == 'flying':
-            messagebox.showwarning(
-                "Error", "Ya estas volando", parent=self.master
-            )
-        elif self.state == 'connected' or self.state == 'disconnected':
+        elif self.state == "flying":
+            messagebox.showwarning("Error", "Ya estas volando", parent=self.master)
+        elif self.state == "connected" or self.state == "disconnected":
             messagebox.showwarning(
                 "Error", "Antes de despegar, debes armar", parent=self.master
             )
 
     def close(self):
+
         if self.state == 'disconnected' or self.state== 'practising':
+
             # this will stop the video stream thread
             self.state = "closed"
             self.cap.release()
-            print ('cap release done')
-            '''
+            print("cap release done")
+            """
             #self.client.loop_stop()
             #self.client.disconnect()
-    
+
             #cv2.destroyAllWindows()
             #cv2.waitKey(1)
-    
+
             self.client.publish("droneCircus/autopilotService/disconnect")
             # self.cap.release()
             #self.client.loop_stop()
-    
+
             #self.client.disconnect()
             time.sleep(5)
             self.client.loop_stop()
             self.client.disconnect()
             self.connected = False
             self.state = 'disconnected'
-            '''
+            """
 
             self.father_frame.destroy()
         else:
@@ -568,10 +566,8 @@ class DetectorClass:
                 "Error", "Antes de salir debes desconectar", parent=self.master
             )
 
-
-
     def practice(self):
-        print ('vamos ')
+
         if self.state == "disconnected":
             # start practising
             self.practice_button["bg"] = "#367E18"
@@ -600,9 +596,13 @@ class DetectorClass:
     def easy(self):
         # show button to select scenario
         self.select_scenario_button.grid(
-            row=1, column=0, columnspan=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+            row=1,
+            column=0,
+            columnspan=2,
+            padx=5,
+            pady=5,
+            sticky=tk.N + tk.S + tk.E + tk.W,
         )
-
 
         # highlight codes for easy pattern
         self.difficult_button["bg"] = "#CC3636"
@@ -614,7 +614,7 @@ class DetectorClass:
             self.image = Image.open("../assets_needed/dedos_faciles.png")
         elif self.mode == "pose":
             self.image = Image.open("../assets_needed/poses_faciles.png")
-        elif self.mode == 'voice':
+        elif self.mode == "voice":
             self.image = Image.open("../assets_needed/voces_faciles.png")
         else:
             self.image = Image.open("../assets_needed/caras_faciles.png")
@@ -633,7 +633,12 @@ class DetectorClass:
 
         # show button to select scenario
         self.select_scenario_button.grid(
-            row=1, column=0, columnspan=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+            row=1,
+            column=0,
+            columnspan=2,
+            padx=5,
+            pady=5,
+            sticky=tk.N + tk.S + tk.E + tk.W,
         )
 
         # highlight codes for difficult pattern
@@ -648,7 +653,7 @@ class DetectorClass:
             self.image = Image.open("../assets_needed/dedos_faciles.png")
         elif self.mode == "pose":
             self.image = Image.open("../assets_needed/poses_dificiles.png")
-        elif self.mode == 'voice':
+        elif self.mode == "voice":
             self.image = Image.open("../assets_needed/voces_dificiles.png")
         else:
             self.image = Image.open("../assets_needed/caras_faciles.png")
@@ -684,38 +689,44 @@ class DetectorClass:
         else:
             return ""
 
-
-    def movePoint (self):
-        print ('muevo a ', self.direction)
+    def movePoint(self):
+        print("muevo a ", self.direction)
         bearing = None
-        if self.direction == 'Norte':
+        if self.direction == "Norte":
             bearing = math.radians(0)
-        elif self.direction == 'Sur':
-            bearing= math.radians(180)
-        elif self.direction == 'Este':
+        elif self.direction == "Sur":
+            bearing = math.radians(180)
+        elif self.direction == "Este":
             bearing = math.radians(90)
-        elif self.direction == 'Oeste':
+        elif self.direction == "Oeste":
             bearing = math.radians(270)
         if bearing != None:
-            R = 6378.1;
-            d = 0.001;
+            R = 6378.1
+            d = 0.001
 
-            lat = math.radians(self.practicePoint[0]);
-            lon = math.radians(self.practicePoint[1]);
+            lat = math.radians(self.practicePoint[0])
+            lon = math.radians(self.practicePoint[1])
 
-            lat2 = math.asin(math.sin(lat) * math.cos(d / R) +
-                             math.cos(lat) * math.sin(d / R) * math.cos(bearing));
+            lat2 = math.asin(
+                math.sin(lat) * math.cos(d / R)
+                + math.cos(lat) * math.sin(d / R) * math.cos(bearing)
+            )
 
-            lon2 = lon + math.atan2(math.sin(bearing) * math.sin(d / R) * math.cos(lat),
-                                     math.cos(d / R) - math.sin(lat) * math.sin(lat2));
-
-            lat2 = math.degrees(lat2);
-            lon2 = math.degrees(lon2);
+            lon2 = lon + math.atan2(
+                math.sin(bearing) * math.sin(d / R) * math.cos(lat),
+                math.cos(d / R) - math.sin(lat) * math.sin(lat2),
+            )
 
             if self.selected_level == 'Basico' \
                     and self.dronLabLimits.contains(Point(lat2,lon2)):
                 self.practicePoint = [lat2,lon2]
                 self.map.move_drone([lat2,lon2], 'red')
+
+            if self.selected_level == "Basico" and self.dronLabLimits.contains(
+                Point(lat2, lon2)
+            ):
+                self.practicePoint = [lat2, lon2]
+                self.map.move_drone([lat2, lon2], 'red')
 
             elif self.selected_level == 'Medio' \
                     and self.dronLabLimits.contains(Point(lat2, lon2)) \
@@ -735,37 +746,52 @@ class DetectorClass:
         self.direction = None
 
         self.dronLabLimits = Polygon(
-            [(41.2764151, 1.9882914),
-             (41.2762170, 1.9883551),
-             (41.2763733, 1.9890491),
-             (41.2765582, 1.9889881)])
+            [
+                (41.2764151, 1.9882914),
+                (41.2762170, 1.9883551),
+                (41.2763733, 1.9890491),
+                (41.2765582, 1.9889881),
+            ]
+        )
 
         self.obstacle_1 = Polygon(
-            [(41.2764408, 1.9885938),
-             (41.2764368, 1.9886494),
-             (41.2763385, 1.9886407),
-             (41.2763450, 1.9885878)])
+            [
+                (41.2764408, 1.9885938),
+                (41.2764368, 1.9886494),
+                (41.2763385, 1.9886407),
+                (41.2763450, 1.9885878),
+            ]
+        )
 
         self.obstacle_2_1 = Polygon(
-            [(41.2765219, 1.9888506),
-             (41.2764065, 1.9888902),
-             (41.2763924, 1.9888600),
-             (41.2765669, 1.9887990)])
+            [
+                (41.2765219, 1.9888506),
+                (41.2764065, 1.9888902),
+                (41.2763924, 1.9888600),
+                (41.2765669, 1.9887990),
+            ]
+        )
         self.obstacle_2_2 = Polygon(
-            [(41.2764287, 1.9887453),
-             (41.2763123, 1.9888077),
-             (41.2763032, 1.9887460),
-             (41.2764267, 1.9887111)])
+            [
+                (41.2764287, 1.9887453),
+                (41.2763123, 1.9888077),
+                (41.2763032, 1.9887460),
+                (41.2764267, 1.9887111),
+            ]
+        )
         self.obstacle_2_3 = Polygon(
-            [(41.2764569, 1.9885515),
-             (41.2763461, 1.9886903),
-             (41.2763274, 1.9886535),
-             (41.2764473, 1.9885274)])
+            [
+                (41.2764569, 1.9885515),
+                (41.2763461, 1.9886903),
+                (41.2763274, 1.9886535),
+                (41.2764473, 1.9885274),
+            ]
+        )
 
         self.practicePoint = [41.2765003, 1.9889760]
         self.show_map(self.practicePoint)
         sched = BackgroundScheduler()
-        sched.add_job(self.movePoint, 'interval', seconds=0.5)
+        sched.add_job(self.movePoint, "interval", seconds=0.5)
         sched.start()
 
         # when the user changes the pattern (new face, new pose or new fingers) the system
@@ -773,14 +799,14 @@ class DetectorClass:
         # we need the following variables to control this
         prevCode = -1
         cont = 0
-        if self.mode == 'voice':
-            self.map.putText('Di algo ...')
+        if self.mode == "voice":
+            self.map.putText("Di algo ...")
 
-        while self.state == 'practising':
+        while self.state == "practising":
 
             # use the selected detector to get the code of the pattern and the image with landmarks
 
-            if self.mode != 'voice':
+            if self.mode != "voice":
                 success, image = self.cap.read()
                 if not success:
                     print("Ignoring empty camera frame.")
@@ -791,7 +817,7 @@ class DetectorClass:
                 code, img = self.detector.detect(img, self.level)
                 #print ('estoy enviando imagenes ', code)
                 # if user changed the pattern we will ignore the next 8 video frames
-                if (code != prevCode):
+                if code != prevCode:
                     cont = 4
                     prevCode = code
                 else:
@@ -800,10 +826,17 @@ class DetectorClass:
                         # the first 8 video frames of the new pattern (to be ignored) are done
                         # we can start showing new results
                         self.direction = self.__set_direction(code)
-                        cv2.putText(img, self.direction, (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 10)
+                        cv2.putText(
+                            img,
+                            self.direction,
+                            (50, 450),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            3,
+                            (0, 0, 255),
+                            10,
+                        )
 
-
-                cv2.imshow('video', img)
+                cv2.imshow("video", img)
                 cv2.waitKey(1)
             else:
                 code, voice = self.detector.detect(self.level)
@@ -812,7 +845,7 @@ class DetectorClass:
                 self.map.putText(voice)
 
         sched.shutdown()
-        cv2.destroyWindow('video')
+        cv2.destroyWindow("video")
         cv2.waitKey(1)
 
     def flying(self):
@@ -876,15 +909,12 @@ class DetectorClass:
         cv2.waitKey(1)
 
     def return_home(self):
-        if self.state == 'flying':
+        if self.state == "flying":
             self.returning = True
             self.direction = "Volviendo a casa"
-            self.return_home_button['text'] ="Volviendo a casa"
-            self.return_home_button['bg'] = 'orange'
+            self.return_home_button["text"] = "Volviendo a casa"
+            self.return_home_button["bg"] = "orange"
 
             self.client.publish("droneCircus/autopilotService/returnToLaunch")
         else:
-            messagebox.showwarning(
-                "Error", "No estas volando", parent=self.master
-            )
-
+            messagebox.showwarning("Error", "No estas volando", parent=self.master)
