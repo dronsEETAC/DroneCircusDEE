@@ -225,6 +225,7 @@ class PoseDetector:
             return False
 
     def detect(self, image, level):
+        image = cv2.flip(image, 1)
         pose_landmarks, img = self.__prepare(image)
         res = ""
         if len(pose_landmarks) > 17:
@@ -285,5 +286,5 @@ class PoseDetector:
                         res = 2  # SOUTH
                     if pose_landmarks[18][0] < pose_landmarks[17][0]:
                         res = 1  # NORTH
-
+        img = cv2.flip(img, 1)
         return res, img

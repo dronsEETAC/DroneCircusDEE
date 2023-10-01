@@ -1,5 +1,6 @@
 import json
 import math
+import os
 import threading
 import time
 import tkinter as tk
@@ -13,11 +14,13 @@ from utils.poseDetector import PoseDetector
 from utils.faceDetector import FaceDetector
 from utils.speechDetector import SpeechDetector
 from utils.MapFrameClass import MapFrameClass
+from utils.AutopilotService import *
 from PIL import ImageTk
 from tkinter import messagebox
 from apscheduler.schedulers.background import BackgroundScheduler
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+from geographiclib.geodesic import Geodesic
 
 
 class DetectorClass:
@@ -58,6 +61,7 @@ class DetectorClass:
         self.level3_button = None
         self.direction = None
         self.selected_level = None
+        self.geod = Geodesic.WGS84
 
     def build_frame(self, father_frame, mode):
         # mode can be: fingers, face or pose
@@ -70,6 +74,7 @@ class DetectorClass:
             self.detector = PoseDetector()
         elif self.mode == "voice":
             self.detector = SpeechDetector()
+
         else:
             self.detector = FaceDetector()
 
@@ -237,6 +242,8 @@ class DetectorClass:
                 self.connect_button["bg"] = "#367E18"
                 self.show_map((lat, lon))
                 self.state = "connected"
+            elif state == "connected" and self.state == "connected":
+                self.map.move_drone((lat, lon), "blue")
             elif state == "armed":
                 self.arm_button["text"] = "armed"
                 self.arm_button["bg"] = "#367E18"
@@ -268,7 +275,7 @@ class DetectorClass:
                 state == "onHearth"
                 and self.state != "onHearth"
                 and self.state != "disconnected"
-            ):
+                ):
                 # the dron completed the RTL
                 self.map.mark_at_home()
                 messagebox.showwarning(
@@ -301,15 +308,22 @@ class DetectorClass:
                 # a mosquitto broker running at localhost (only in simulation mode)
                 #external_broker_address = "localhost"
 
-            else:
-                # in local mode, the external broker will run always in localhost
-                # (either in production or simulation mode)
-                # use this when connecting with the RPi
+            elif self.connection_mode == "local":
+                # in local mode, simulation mode the external broker will run always in localhost
+                # external_broker_address = "localhost"
+                # in local mode, production mode the external broker will run in the RPi
                 external_broker_address = "10.10.10.1"
-                #external_broker_address = "localhost"
+            else:
+
+                #cmd = 'C:\\"Program Files"\mosquitto\\mosquitto -v -c mosquitto8000.conf -d'
+                #os.system(cmd)
+                print ('modo directo')
+                external_broker_address = "localhost"
+                w = threading.Thread(target=AutopilotService, )
+                w.start()
 
             # the external broker must run always in port 8000
-            external_broker_port = 8083
+            external_broker_port = 8000
 
             self.client = mqtt.Client("Detector", transport="websockets")
             self.client.on_message = self.on_message
@@ -319,6 +333,8 @@ class DetectorClass:
             self.connected = True
             self.close_button2.grid_forget()
             self.client.subscribe("autopilotService/droneCircus/#")
+            time.sleep (5)
+            print ('envio connect')
             self.client.publish("droneCircus/autopilotService/connect")
             self.client.publish("droneCircus/monitor/start")
             self.connect_button["text"] = "connecting ..."
@@ -332,6 +348,11 @@ class DetectorClass:
 
     def global_mode(self):
         self.connection_mode = "global"
+        self.select_connection_mode_window.destroy()
+        self.connect()
+
+    def direct_mode(self):
+        self.connection_mode = "direct"
         self.select_connection_mode_window.destroy()
         self.connect()
 
@@ -351,18 +372,19 @@ class DetectorClass:
             select_connection_mode_frame.rowconfigure(1, weight=1)
             select_connection_mode_frame.columnconfigure(0, weight=1)
             select_connection_mode_frame.columnconfigure(1, weight=1)
+            select_connection_mode_frame.columnconfigure(2, weight=1)
 
-            self.image1 = Image.open("../assets_needed/connection_mode.png")
-            self.image1 = self.image1.resize((1100, 450), Image.ANTIALIAS)
+            self.image1 = Image.open("../assets_needed/connection_mode_3.png")
+            self.image1 = self.image1.resize((1000, 400), Image.ANTIALIAS)
             self.bg1 = ImageTk.PhotoImage(self.image1)
-            canvas1 = tk.Canvas(select_connection_mode_frame, width=1100, height=450)
+            canvas1 = tk.Canvas(select_connection_mode_frame, width=1000, height=400)
             canvas1.create_image(0, 0, image=self.bg1, anchor="nw")
             canvas1.grid(
                 row=0,
                 column=0,
                 padx=5,
                 pady=5,
-                columnspan=2,
+                columnspan=3,
                 sticky=tk.N + tk.S + tk.E + tk.W,
             )
 
@@ -376,6 +398,16 @@ class DetectorClass:
             self.global_button.grid(
                 row=1, column=0, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
             )
+            self.direct_button = tk.Button(
+                select_connection_mode_frame,
+                text="Direct",
+                bg="#CC3636",
+                fg="white",
+                command=self.direct_mode,
+            )
+            self.direct_button.grid(
+                row=1, column=1, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+            )
             self.local_button = tk.Button(
                 select_connection_mode_frame,
                 text="Local",
@@ -384,7 +416,7 @@ class DetectorClass:
                 command=self.local_mode,
             )
             self.local_button.grid(
-                row=1, column=1, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+                row=1, column=2, padx=20, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
             )
         elif self.state != "flying":
             self.connect_button["text"] = "connect"
@@ -691,32 +723,32 @@ class DetectorClass:
 
     def movePoint(self):
         print("muevo a ", self.direction)
+        print('practicing point ', self.practicePoint[0], self.practicePoint[1])
         bearing = None
+        azimuth = None
         if self.direction == "Norte":
             bearing = math.radians(0)
+            azimuth = 0
         elif self.direction == "Sur":
             bearing = math.radians(180)
+            azimuth = 180
         elif self.direction == "Este":
             bearing = math.radians(90)
+            azimuth = 90
         elif self.direction == "Oeste":
             bearing = math.radians(270)
-        if bearing != None:
-            R = 6378.1
-            d = 0.001
-
-            lat = math.radians(self.practicePoint[0])
-            lon = math.radians(self.practicePoint[1])
-
-            lat2 = math.asin(
-                math.sin(lat) * math.cos(d / R)
-                + math.cos(lat) * math.sin(d / R) * math.cos(bearing)
+            azimuth = 270
+        if azimuth != None:
+            g = self.geod.Direct(
+                float(self.practicePoint[0]),
+                float(self.practicePoint[1]),
+                azimuth,
+                1,
             )
+            lat2 = float (g['lat2'])
+            lon2 = float(g['lon2'])
 
-            lon2 = lon + math.atan2(
-                math.sin(bearing) * math.sin(d / R) * math.cos(lat),
-                math.cos(d / R) - math.sin(lat) * math.sin(lat2),
-            )
-
+            print('nuevo ', lat2, lon2)
             if self.selected_level == 'Basico' \
                     and self.dronLabLimits.contains(Point(lat2,lon2)):
                 self.practicePoint = [lat2,lon2]
@@ -789,6 +821,7 @@ class DetectorClass:
         )
 
         self.practicePoint = [41.2765003, 1.9889760]
+        print('practicing point ', self.practicePoint[0], self.practicePoint[1])
         self.show_map(self.practicePoint)
         sched = BackgroundScheduler()
         sched.add_job(self.movePoint, "interval", seconds=0.5)
@@ -881,9 +914,8 @@ class DetectorClass:
                         elif code == 2:  # south
                             self.client.publish(go_topic, "South")
                         elif code == 5:
-                            self.client.publish("droneCircus/autopilotService/drop")
-                            time.sleep(2)
-                            self.client.publish("droneCircus/autopilotService/reset")
+                            self.client.publish("droneCircus/LEDsService/drop")
+
                         elif code == 3:  # east
                             self.client.publish(go_topic, "East")
                         elif code == 4:  # west
