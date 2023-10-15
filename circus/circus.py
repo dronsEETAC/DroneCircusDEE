@@ -1,5 +1,8 @@
 import time
 from tkinter import *
+import tkinter as tk
+from tkinter import font, simpledialog
+
 from pygame import mixer
 from tkinter import font
 from PIL import Image, ImageTk
@@ -9,6 +12,8 @@ from utils.ColorsNew import ColorsNew
 from utils.GuideWithColors import GuideWithColors
 
 # from ColorsClass import ColorsClass
+
+
 
 mixer.init()
 mixer.music.load("../assets_needed/circo.mp3")
@@ -80,6 +85,8 @@ def fingers():
     new_window = Toplevel(root)
     new_window.title("Dedos")
     new_window.geometry("450x800")
+
+
     detector = DetectorClass()
     frame = detector.build_frame(new_window, "fingers")
     mixer.music.stop()
