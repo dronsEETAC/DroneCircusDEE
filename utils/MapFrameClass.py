@@ -1,4 +1,5 @@
 import math
+import threading
 import time
 import tkinter as tk
 import tkintermapview
@@ -13,6 +14,7 @@ class ComputeCoords:
         # one point (x,y) in the canvas and the corresponding position (lat,lon)
         self.refCoord = [651, 279]
         self.refPosition = [41.2763748, 1.9889669]
+
 
     def convert(self, position):
         g = self.geod.Inverse(
@@ -36,6 +38,7 @@ class ComputeCoords:
 
 class MapFrameClass:
     def __init__(self):
+        self.next_checkpoint_map = None
         self.father_frame = None
         self.map_frame = None
         self.drone_lat = None
@@ -45,11 +48,20 @@ class MapFrameClass:
         self.ppm = None
         self.drone_x = None
         self.drone_y = None
+        self.checkpoint_x = None
+        self.checkpoint_y = None
         self.to_east = None
         self.to_west = None
         self.to_north = None
         self.to_south = None
         self.dest = None
+        self.gif0_frames = []
+        self.gif1_frames = []
+        self.gif2_frames = []
+        self.gif3_frames = []
+        self.gif4_frames = []
+        self.frame_count = -1
+        self.current_frame = None
 
     def build_frame(self, father_frame, position, selected_level):
         self.father_frame = father_frame
@@ -157,6 +169,11 @@ class MapFrameClass:
             font=("Helvetica 18 bold"),
         )
         self.message = None
+
+        x = threading.Thread(target=self.ready_gifs())
+        x.start()
+
+
         return self.map_frame
 
     def putText(self, message):
@@ -289,3 +306,155 @@ class MapFrameClass:
 
     def mark_at_home(self):
         self.canvas.itemconfig(self.point, fill="blue")
+
+    # DRONE CIRCUS RACE MODE
+
+    # Function to show chekpoints
+    def show_checkpoint(self, position):
+        self.checkpoint_x, self.checkpoint_y = self.converter.convert(position)
+
+        self.checkpoint = self.canvas.create_oval(
+            self.checkpoint_x - 8,
+            self.checkpoint_y - 8,
+            self.checkpoint_x + 8,
+            self.checkpoint_y + 8,
+            fill="yellow",
+        )
+
+    # Function to pre-load gif frames for animations
+    def ready_gifs(self):
+
+        gif0_image = Image.open("../assets_needed/Best_checkpoint2.gif")
+        gif1_image = Image.open("../assets_needed/Good_checkpoint2.gif")
+        gif2_image = Image.open("../assets_needed/Medium_checkpoint2.gif")
+        gif3_image = Image.open("../assets_needed/Bad_checkpoint2.gif")
+        gif4_image = Image.open("../assets_needed/Worst_checkpoint2.gif")
+
+        for r in range(0, gif0_image.n_frames):
+            gif0_image.seek(r)
+            self.gif0_frames.append(gif0_image.copy().resize((150, 150)))
+
+        for r in range(0, gif1_image.n_frames):
+            gif1_image.seek(r)
+            self.gif1_frames.append(gif1_image.copy().resize((150, 150)))
+
+        for r in range(0, gif2_image.n_frames):
+            gif2_image.seek(r)
+            self.gif2_frames.append(gif2_image.copy().resize((150, 150)))
+
+        for r in range(0, gif3_image.n_frames):
+            gif3_image.seek(r)
+            self.gif3_frames.append(gif3_image.copy().resize((150, 150)))
+
+        for r in range(0, gif4_image.n_frames):
+            gif4_image.seek(r)
+            self.gif4_frames.append(gif4_image.copy().resize((150, 150)))
+
+        self.frame_delay = 125
+
+        self.gif_canvas_image = tk.Label(self.canvas, background='pink')
+        self.gif_canvas_image.pack()
+
+    # Function called when chekpoint is reached
+    def checkpoint_skip(self, position, multiplier):
+        self.next_checkpoint_map = True
+
+        print("Next checkpoint: " + str(self.next_checkpoint_map))
+
+        self.play_gif(position, multiplier)
+
+    # Displays gif animation based on penalty multiplier
+    def play_gif(self, position, multiplier):
+        print("Playing")
+        self.gif_x, self.gif_y = self.converter.convert(position)
+
+        while self.next_checkpoint_map is True:
+            if self.frame_count >= len(self.gif0_frames) - 1:
+                self.canvas.delete(image)
+                self.frame_count = -1
+                self.next_checkpoint_map = False
+
+            else:
+                self.frame_count += 1
+
+                # Checkpoint Animation Logic
+
+                if multiplier == 1:
+                    self.current_frame = ImageTk.PhotoImage(self.gif0_frames[self.frame_count])
+                    image = self.canvas.create_image(int(self.gif_x), int(self.gif_y), image=self.current_frame)
+                    print(self.frame_count)
+
+                elif multiplier == 1.1:
+                    self.current_frame = ImageTk.PhotoImage(self.gif1_frames[self.frame_count])
+                    image = self.canvas.create_image(int(self.gif_x), int(self.gif_y), image=self.current_frame)
+                    print(self.frame_count)
+
+                elif multiplier == 1.5:
+                    self.current_frame = ImageTk.PhotoImage(self.gif2_frames[self.frame_count])
+                    image = self.canvas.create_image(int(self.gif_x), int(self.gif_y), image=self.current_frame)
+                    print(self.frame_count)
+
+                elif multiplier == 1.8:
+                    self.current_frame = ImageTk.PhotoImage(self.gif3_frames[self.frame_count])
+                    image = self.canvas.create_image(int(self.gif_x), int(self.gif_y), image=self.current_frame)
+                    print(self.frame_count)
+
+                elif multiplier == 2:
+                    self.current_frame = ImageTk.PhotoImage(self.gif4_frames[self.frame_count])
+                    image = self.canvas.create_image(int(self.gif_x), int(self.gif_y), image=self.current_frame)
+                    print(self.frame_count)
+
+                self.canvas.after(self.frame_delay)
+
+    # Unused test function
+    def show_precision(self, lat, lon, color, duration):
+        self.circle_x = math.degrees(lat)
+        self.circle_y = math.degrees(lon)
+
+        self.position = [self.circle_x, self.circle_y]
+
+        self.circle_1_x, self.circle_1_y = self.converter.convert(self.position)
+
+        frame_delay = 0
+        #
+        #
+        # self.circle = self.canvas.create_oval(
+        #     self.circle_1_x + 20,
+        #     self.circle_1_y + 20,
+        #     self.circle_1_x - 20,
+        #     self.circle_1_y - 20,
+        #     outline="green",
+        #
+        #     #fill="green",
+        #     width=6,
+        # )
+
+
+
+        #self.canvas.after(3000)
+
+        # opacity_decrement = 1.0 / (duration/100)
+        #
+        # for i in range(duration//100):
+        #     opacity = 1.0 - (i * opacity_decrement)
+        #     self.canvas.itemconfig(self.circle, outline=f"gray{opacity*100:.0f}")
+        #     self.canvas.update()
+        #     self.canvas.after(100)
+
+        #self.canvas.delete(self.circle)
+
+    # Function to show next checkpoint
+    def move_checkpoint(self, position):
+        self.checkpoint_x, self.checkpoint_y = self.converter.convert(position)
+
+        self.canvas.coords(
+            self.checkpoint,
+            self.checkpoint_x - 8,
+            self.checkpoint_y - 8,
+            self.checkpoint_x + 8,
+            self.checkpoint_y + 8,
+        )
+
+    # Function to close map
+    def close(self):
+        self.father_frame.destroy()

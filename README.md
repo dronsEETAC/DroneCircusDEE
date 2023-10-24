@@ -35,3 +35,24 @@ This is a summary of what you can see in the video:
 In order to run and contribute to this module you need Pythion 3.7. We recommend PyCharm as IDE for development.
 To contribute to must follow the contribution protocol describen in the main repo of the Drone Engineering Ecosystem.
 [![DroneEngineeringEcosystem Badge](https://img.shields.io/badge/DEE-MainRepo-brightgreen.svg)](https://github.com/dronsEETAC/DroneEngineeringEcosystemDEE)
+
+## Race Mode
+Here you can find some information about the race mode, such as which modules you will need and how to set them up
+propperly, as well as a demonstration on how to use it.
+
+### Modules:
+1. [![DroneEngineeringEcosystem Badge](https://img.shields.io/badge/DEE-AutopilotService-brightgreen.svg)](https://github.com/dronsEETAC/AutopilotServiceDEE)
+2. [![DroneEngineeringEcosystem Badge](https://img.shields.io/badge/DEE-MobileApp-brightgreen.svg)](https://github.com/dronsEETAC/IonicVueMobileAppDEE)
+
+You will also need to install MissionPlanner.
+
+### Setup:
+In order to correctly set up the necessary modules is recommended to follow the installation described in the
+corresponding repositories. Here is a video showing how to set up and start the race mode and a short demonstration on its use:
+
+[Race Mode Demo Video](https://youtu.be/ldtxxnsqPkE)
+
+### Info
+Here is a short video that provides some explanations on some functions of this code:
+
+[Race Mode Code Insights](https://youtu.be/qfGSM66-Hmw)
