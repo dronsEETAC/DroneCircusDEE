@@ -309,7 +309,9 @@ class DetectorClass:
                 #external_broker_address = "localhost"
 
             # the external broker must run always in port 8000
-            external_broker_port = 8083
+            external_broker_port = 8000
+
+            #estaba puesto el 8083?
 
             self.client = mqtt.Client("Detector", transport="websockets")
             self.client.on_message = self.on_message
@@ -718,15 +720,16 @@ class DetectorClass:
             )
 
             if self.selected_level == 'Basico' \
-                    and self.dronLabLimits.contains(Point(lat2,lon2)):
-                self.practicePoint = [lat2,lon2]
-                self.map.move_drone([lat2,lon2], 'red')
+                    and self.dronLabLimits.contains(Point(math.degrees(lat2), math.degrees(lon2))):
+                self.practicePoint = [math.degrees(lat2), math.degrees(lon2)]
+                self.map.move_drone([math.degrees(lat2), math.degrees(lon2)], 'red')
 
             if self.selected_level == "Basico" and self.dronLabLimits.contains(
                 Point(lat2, lon2)
             ):
                 self.practicePoint = [lat2, lon2]
                 self.map.move_drone([lat2, lon2], 'red')
+
 
             elif self.selected_level == 'Medio' \
                     and self.dronLabLimits.contains(Point(lat2, lon2)) \

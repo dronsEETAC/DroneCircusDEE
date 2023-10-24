@@ -5,6 +5,7 @@ from tkinter import font
 from PIL import Image, ImageTk
 from tkvideo import tkvideo
 from utils.DetectorClass import DetectorClass
+from utils.RaceClass import RaceClass
 
 # from ColorsClass import ColorsClass
 
@@ -22,6 +23,8 @@ canvas1 = Canvas(root, width=700, height=500)
 canvas1.pack(fill="both", expand=True)
 canvas1.create_image(0, 0, image=bg, anchor="nw")
 
+
+
 myFont = font.Font(family="Bernard MT Condensed", size=28, weight="bold")
 
 """'
@@ -37,7 +40,7 @@ def colors ():
     newWindow.geometry("450x800")
     #color = ColorsClass()
     frame = color.buildFrame(newWindow)
-    frame.pack(fill="both", expand="yes", padx=10, pady=10)
+º    frame.pack(fill="both", expand="yes", padx=10, pady=10)
     newWindow.mainloop()
 """
 
@@ -102,6 +105,18 @@ def faces():
     new_window.mainloop()
 
 
+def race():
+    mixer.music.stop()
+
+    new_window = Toplevel(root)
+    new_window.title("Race")
+    new_window.geometry("450x800")
+    races = RaceClass()
+    frame = races.build_frame(new_window)
+    frame.pack(fill="both", expand="yes", padx=10, pady=10)
+    new_window.mainloop()
+
+
 def bye():
     new_window = Toplevel(root)
     new_window.title("bye")
@@ -139,6 +154,7 @@ def enter():
     new_window.columnconfigure(1, weight=1)
     new_window.columnconfigure(2, weight=1)
     new_window.columnconfigure(3, weight=1)
+    new_window.columnconfigure(4, weight=1)
     new_window.rowconfigure(0, weight=1)
     new_window.rowconfigure(1, weight=1)
     new_window.rowconfigure(2, weight=1)
@@ -147,7 +163,7 @@ def enter():
     image2 = image2.resize((1100, 500), Image.ANTIALIAS)
     bg2 = ImageTk.PhotoImage(image2)
     canvas2 = Canvas(new_window, width=1100, height=500)
-    canvas2.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky=N + S + E + W)
+    canvas2.grid(row=0, column=0, columnspan=5, padx=5, pady=5, sticky=N + S + E + W)
     canvas2.create_image(0, 0, image=bg2, anchor="nw")
 
     colors_button = Button(
@@ -168,13 +184,18 @@ def enter():
     faces_button = Button(
         new_window, text="Caras", height=1, bg="#367E18", fg="#FFE9A0", command=faces
     )
-    faces_button.grid(row=1, column=3, padx=(5, 10), pady=5, sticky=N + S + E + W)
+    faces_button.grid(row=1, column=3, padx=5, pady=5, sticky=N + S + E + W)
     faces_button["font"] = myFont
+    race_button = Button(
+        new_window, text="Carrera", height=1, bg="#367E18", fg="#FFE9A0", command=race
+    )
+    race_button.grid(row=1, column=4, padx=(5,10), pady=5, sticky=N + S + E + W)
+    race_button["font"] = myFont
 
     bye_button = Button(
         new_window, text="Salir", height=1, bg="#FFE9A0", fg="#367E18", command=bye
     )
-    bye_button.grid(row=2, column=0, columnspan=4, padx=5, pady=5, sticky=N + S + E + W)
+    bye_button.grid(row=2, column=0, columnspan=5, padx=5, pady=5, sticky=N + S + E + W)
     bye_button["font"] = myFont
     new_window.mainloop()
 
